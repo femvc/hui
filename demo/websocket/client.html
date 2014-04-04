@@ -1,0 +1,20 @@
+
+    <div id="show"></div>
+    <input id="msg" name="" type="text" />
+    <input id="send" type="submit" value="Send" />
+    <script type="text/javascript">
+        var ws = new WebSocket('ws://'+document.domain+':2050/'),
+            msg = document.getElementById("msg"),
+            show = document.getElementById("show"),
+            send = document.getElementById("send");
+
+        send.onclick = function() {
+            var val = msg.value;
+                ws.send(val);
+        };
+
+        ws.onmessage = function(evt) {
+            show.innerHTML += evt.data + "<br />";
+        };
+    </script>
+

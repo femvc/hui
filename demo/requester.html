@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Requester异步请求管理库</title>
+<script type="text/javascript" src="../helper/require.js"></script>
+<script type="text/javascript" src="../helper/hui.js"></script>
+<script type="text/javascript" src="../helper/hui_mockup.js"></script>
+<script type="text/javascript" src="../helper/requester.js"></script>
+<script type="text/javascript">
+<!--
+
+/**
+* 测试代码
+*/
+function doit() {
+    //注: test.json -> {"message":{},"success":"true","result":[]}
+    //Requester.get('ajax/test.json',{
+    //    data: '',
+    //    onsuccess: function(err, data){
+    //        alert(data.success)
+    //    }
+    //});
+    
+    hui.Mockup.set('/user_list/all', {
+        success: 'true',
+        result: [
+            {user_id:'unspecified',user_name:'',       user_label: '(unspecified)'},
+            {user_id:'andy.wang',  user_name:'王海洋', user_label: '王海洋(andy.wang)'},
+            {user_id:'jicheng.li', user_name:'李吉成', user_label: '李吉成(jicheng.li)'}
+        ]
+    });
+
+    
+        
+    //注: 跨域会导致请求出错
+    Requester.get('/user_list/all', {
+        data: '', 
+        onsuccess: function(err, resData){debugger;alert(resData.result.length)}
+    });
+    
+    //注: 跨域推荐JSONP
+    Requester.JSONP('http://femvc.com/other/ajax/jsonp.php', {
+        data: '', 
+        onsuccess: function(err, resData){  
+            alert(resData.id)
+        }
+    });
+}
+//*/
+
+
+
+//-->
+</script>
+</head>
+
+<body><button type="button" onclick="doit()">doit</button>
+
+</body>
+
+</html>

@@ -1,0 +1,210 @@
+﻿html, body, h1, h2, h3, h4, h5, h6, ul, li {padding: 0px; margin: 0px; list-style: none;}
+body {padding-bottom: 0px; overflow-y: scroll;}
+a {color: #08348b; text-decoration: none;}
+a:hover {color: #08348b; text-decoration: none;}
+img {border: 0px;}
+.clearfix {border: 0 none; clear: both; font-size: 1px; height: 1px; line-height: 1px; margin: 0; overflow: hidden; padding: 0;}
+@font-face {
+font-family: Avenir;
+font-weight: bold;
+src: url("AvenirLTStd-Heavy.otf") format("opentype");
+}
+@font-face {
+font-family: Avenir;
+font-weight: lighter;
+src: url("AvenirLTStd-Light.otf") format("opentype");
+}
+@font-face {
+font-family: Avenir;
+font-weight: normal;
+src: url("AvenirLTStd-Medium.otf") format("opentype");
+}
+@font-face {
+font-family: Avenir;
+font-style:oblique;
+src: url("AvenirLTStd-Oblique.otf") format("opentype");
+}
+
+button b {padding:15px; }
+.btn {height: 42px; line-height: 1em; border: 0px; background-color: #2159A6; color: white; font-size: 14px; font-weight: bold; cursor: pointer; font-family: Avenir;}
+.btn2 {background-color: #2159A6; border: 0 none; color: #FFFFFF; font-family: Avenir; font-size: 15px; margin-left: 12px; padding-bottom: 3px; padding-top: 3px; cursor: pointer;}
+.btn3 {    background-color: #2159A6;
+    border: 0 none;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-family: Avenir;
+    font-size: 15px;
+    margin-left: 12px;
+    opacity: 0.63;
+    padding-bottom: 7px;
+    padding-top: 9px; }
+.textinput {border: 1px solid #2159a6; font-size: 16px; line-height: 1em; padding: 3px; width: 175px;}
+.textinput2 {
+    border: 2px solid #2159A6;
+    font-size: 16px;
+    line-height: 1em;
+    padding: 7px 5px;
+    width: 304px;
+}
+.textinput3 {
+	border: 2px solid #2159A6;
+    font-size: 16px;
+    line-height: 1em;
+    padding: 7px 5px;
+    width: 304px;
+}
+
+.page {font-family: "Avenir","Lucida Sans Unicode"; position: relative; z-index: 1; width: 1001px; margin-left: auto; margin-right: auto; padding-top: 0px;}
+.topbar {position: absolute; z-index: 2; left: 0px; top: 18px;}
+.topbar h1 {padding: 0px; margin: 0px; padding-top: 0px; margin-left: 12px; font-size: 26px; font-weight: bold; color: #003f97; letter-spacing: 1px;}
+.webim {background-color: #EAE8E8; bottom: 0; position: absolute; right: 0; top: 0; width: 162px; z-index: 4;}
+.webim .webim-container {padding-left: 15px;}
+.userinfo {padding-left: 55px; padding-top: 23px; height: 55px; position: relative; z-index: 2; font-size: 13px;}
+.userinfo .avatar {float: left; margin-left: -55px; margin-top: 4px;}
+.userinfo .nick {font-size: 14px; line-height: 19px;}
+.contacts {font-size: 13px; left: 0px; line-height: 1em; margin-left: -15px;}
+.contacts .list .num {background-color: #FFFFFF; border-radius: 4px; float: right; font-family: Arial; font-size: 12px; letter-spacing: 1px; line-height: 1em; margin-right: 7px; padding: 3px 1px; text-align: center; width: 19px; margin-top: -3px;}
+.contacts .list .nick {}
+.contacts .title {font-size: 14px; padding-bottom: 15px; padding-left: 15px; padding-top: 5px;}
+.contacts .recent {}
+.contacts .friend {margin-top: 23px;}
+.contacts .following {margin-top: 23px;}
+.contacts .follower {margin-top: 23px;}
+.contacts .list .row {cursor: pointer; padding-top: 7px; padding-bottom: 8px; padding-left: 15px; position: relative; z-index: 2; color: #003f97;}
+.contacts .list .row:hover {background-color: #003399;}
+.contacts .list .row:hover .username .nick {color: #ffffff;}
+.contacts .list .row:hover .username .num {background-color: transparent;}
+.usertip {background-color: white; display: block; border: 3px solid #004097; display: block; left: -209px; position: absolute; top: 1px; width: 201px; padding-bottom: 11px; z-index: 3;}
+.usertip .baseinfo {margin-bottom: 12px;}
+.usertip .baseinfo .avatar {padding: 13px 0px 10px; text-align: center;}
+.usertip .baseinfo .title {text-align: center; font-size: 14px; line-height: 1em; padding-bottom: 5px; color: #003399; font-weight: normal; padding-left: 0px;}
+.usertip .baseinfo .major {text-align: center; color: #666; font-size: 14px; line-height: 1em; padding-bottom: 0px;}
+.usertip .newstatus {background-color: #E9E9E9; border-radius: 10px; font-size: 13px; line-height: 19px; margin: 0 12px; padding: 11px 13px 12px 16px;}
+.usertip .newstatus .content {color: #003F97;}
+.usertip .newstatus .time {color: #888; font-size: 13px; line-height: 1em; padding: 6px 0px 4px;}
+.chat {background-color: #FFFFFF; border: 3px solid #004097; bottom: 0; display: block; left: 50%; margin-left: 145px; padding-bottom: 0; position: fixed; width: 201px; z-index: 3;}
+.chat .title {position: relative; z-index: 4; color: white; font-weight: normal; font-size: 17px; line-height: 1em; background-color: #004097; padding: 10px 11px 15px;}
+.chat .close {position: absolute; z-index: 5; cursor: pointer; top: 0px; right: 0px; padding: 8px;}
+.chat .list {padding: 0px 9px; height: 190px; overflow-y: auto;}
+.chat .item {position: relative; z-index: 5; padding-top: 8px; padding-bottom: 8px;}
+.chat .item .text {display: inline-block; text-align: left; border-radius: 10px; background-color: rgb(230, 230, 230); padding: 5px 8px 13px 10px; white-space: normal; word-break: break-all;}
+.chat .item .avatar {position: absolute; z-index: 6; top: 11px; left: 2px;}
+.chat .he {text-align: left; padding-left: 45px;}
+.chat .he .sendtime {clear: both; font-size: 13px; letter-spacing: 0px; padding-top: 4px; padding-right: 0px; text-align: left; margin-left: -42px; color: rgb(102, 102, 102);}
+.chat .me {text-align: right;}
+.chat .me .sendtime {clear: both; color: gray; text-align: right; font-size: 13px; letter-spacing: 0px; padding-top: 4px; padding-right: 0px;}
+.chat .me .avatar {display: none;}
+.chat .write {border-top: 3px solid #004097; background-color: white; padding-left: 4px;}
+.chat .write .input {height: 35px; font-size: 16px; font-weight: bold; color: rgb(51, 51, 51); border: 0px none; width: 98%;}
+.feed {margin-left: 201px; padding-top: 15px; padding-right: 160px;}
+.feed-filter {font-size: 16px; font-weight: bold; position: relative; z-index: 2; height: 60px; color: #08348b;}
+.feed-filter .friend {position: absolute; z-index: 3; top: 0px; left: 0px;}
+.feed-filter .gender {position: absolute; z-index: 3; top: 0px; left: 250px;}
+.feed-filter .age {position: absolute; z-index: 3; top: 0px; left: 420px;}
+.feed-filter .more {position: absolute; z-index: 3; top: 0px; left: 535px;}
+.feed-filter .search {position: absolute; z-index: 3; top: -3px; left: 693px;}
+.feed-list {width: 612px;}
+.feed-list .feed-list-title {font-size: 16px; margin: 23px 0 8px; padding: 0;}
+.feed-list .feed-container {padding-bottom: 60px; padding-left: 0; padding-top: 40px;}
+.feed-list .feed-list-tab {height: 50px;}
+.feed-list .feed-list-tab .tab-item {border-bottom: 4px solid #F1F1F1; float: left; font-size: 14px; font-weight: bold; line-height: 1em; padding-bottom: 17px; padding-top: 15px; text-align: center; width: 50%; cursor: pointer;}
+.feed-list .feed-list-tab .selected {border-bottom: 4px solid #c1d8f6;}
+.feed-item {position: relative; z-index: 2; padding-bottom: 43px;}
+.feed-item .original {margin-left: 115px; padding-bottom: 10px;}
+.feed-item .original .avatar {position: absolute; z-index: 3; left: 0px; top: 0px;}
+.feed-item .original .title {font-size: 14px; color: #666; padding-bottom: 9px;}
+.feed-item .original .title .nick {font-size: 16px; color: #08348b;}
+.feed-item .original .relation {font-size: small; font-style: italic; padding-left: 10px;}
+.feed-item .original .relation i {color: #08348b;}
+.feed-item .original .box {background-image: url("../img/box-arrow.png"); background-position: 0 23px; background-repeat: no-repeat; margin-left: -7px; margin-top: 0; padding-left: 8px;}
+.feed-item .original .content {background-color: #f5f5f5; border-radius: 0; display: inline-block; font-size: 12px; line-height: 1.5em; padding: 9px 12px;}
+.feed-item .original .media {margin-top: 10px;}
+.feed-item .original .time {}
+.feed-item .action {font-size: 12px; color: #666; padding-top: 14px; padding-left: 33px; height: 30px;}
+.feed-item .action .smile {float: left; margin-left: -30px; margin-top: 2px; cursor: pointer;}
+.feed-item .action .textinput {float: left;}
+.feed-item .action .btn2 {float: left;}
+.comment-container {}
+.comment-list {margin-left: 110px;}
+.comment-list .comment-item {font-size: 14px; padding-bottom: 12px;}
+.comment-list .comment-item .avatar {margin-left: -60px; position: absolute; z-index: 2; width: 45px; left: 110px;}
+.comment-list .comment-item .title {color: #666;}
+.comment-list .comment-item .title .nick {font-size: 13px; margin-right: 3px;}
+.comment-list .comment-item .content {display: block; color: #666;}
+.comment-list .comment-item .time {display: block; color: #666;}
+.comment-list .new-comment {}
+.comment-list .new-comment .avatar {margin-left: -60px; position: absolute; z-index: 2; width: 45px;}
+.comment-list .new-comment .content {border: 1px solid #666; overflow: auto; width: 361px; height: 42px;}
+.postnew {position: fixed; z-index: 2; bottom: 10px; width: 739px; margin-left: -2px;}
+.postnew .avatar {position: absolute;}
+.postnew .sendbox {border: 3px solid #003F97; margin-left: 58px; text-align: right; position: relative; z-index: 2; background-color: white;}
+.postnew .sendbox .input {border-style: none; border-color: inherit; border-width: 0px; color: #003F97; font-size: 26px; font-weight: bold; width: 82%; position: absolute; z-index: 3; left: 0px; line-height: 40px; height: 40px; padding: 5px; font-style: italic; background: transparent; top: 0px;}
+.postnew .sendbox .send-button {border: 0px; color: white; width: 107px; font-size: 22px; height: 48px; line-height: 40px; position: relative; z-index: 4; font-weight: bold; background-color: #003F97;}
+.left-side {float: left; margin-top: 90px; margin-left: 13px; width: 168px;}
+.campus-list {}
+.campus-item {}
+.campus-item .campus-title {background-color: #E5E5E5; color: #333333; font-size: 16px; line-height: 1em; font-family: "Avenir LT 35 Light"; padding: 13px 0 8px 12px; border-radius: 0px;}
+.campus-list .campus-item .campus-title .num {float: right; font-size: 12px; letter-spacing: 0; margin-right: 6px; margin-top: -2px; text-align: center; width: 22px;}
+.campus-list .campus-item .roomlist {font-size: 14px; padding-top: 13px; padding-left: 0px; background-color: white; padding-bottom: 5px; min-height: 300px;}
+.campus-list .campus-item .roomlist li {letter-spacing: -0.5px; line-height: 26px; margin-top: 2px; padding-left: 10px;}
+.campus-list .campus-item .roomlist .selected {background-color: #c1d8f6;}
+.campus-list .campus-item .roomlist .num {background-color: #E5E5E5; border-radius: 3px; float: right; font-size: 12px; letter-spacing: -1px; line-height: 1em; margin-left: -10px; margin-right: 5px; margin-top: 4px; padding: 3px 3px 3px 2px; text-align: center; width: 19px;}
+.roomname {display: block;}
+.hangout {}
+.hangout .hangout-box {margin-top: 26px; border: 2px solid #003F97;}
+.hangout .hangout-title {font-size: 16px; color: white; text-align: center; line-height: 40px; height: 45px; border-bottom: 1px solid #003F97; background-color: #003F97;}
+.hangout .hangout-content {line-height: 22px; font-size: 13px; font-style: italic; text-align: center; padding-bottom: 10px; background-color: white;}
+.hangout .hangout-content .avatar {margin: 12px auto 10px;}
+.hangout .hangout-content .tip {text-align: left; padding-left: 17px;}
+.hangout .hangout-content .todo {text-align: left; padding-left: 17px; color: #08348b;}
+.hangout .hangout-content .respond {text-align: center; padding: 10px 10px 0px;}
+.hangout .hangout-content .respond-button {border: 0px; background-color: transparent; background-color: #003F97; width: 108px; height: 40px; line-height: 40px; color: white; font-size: 18px; font-weight: bold;}
+.hangout .hangout-option {text-align: center; font-size: 15px; line-height: 1em; margin-top: 11px; padding-bottom: 10px;}
+
+.profile {margin-left: 208px; padding-top: 30px; color: #333; line-height: 1em; padding-bottom: 20px; font-family: Avenir;}
+.profile .title {line-height: 1em; height: 29px;}
+.profile .title .nick {font-size: 21px; float: left;}
+.profile .title .smile {padding-left: 13px; color: #666666; font-size: 12px; float: left; margin-top: -5px;}
+.profile .title .num {color: #999999; display: inline-block; font-size: 12px; margin-left: 6px; margin-top: 3px;}
+.profile .desc {font-size: 13px; color: #333; line-height: 1em; margin-bottom: 19px;}
+
+.profile .photo {height: 200px;}
+.profile .photo .avatar {float: left;}
+.profile .photo .upload {margin-left: 170px;}
+.profile .photo .row {display: block;}
+.profile .photo .tip {font-size: 14px; color: #333; padding-bottom: 22px; padding-top: 7px;}
+.profile .photo .btn {margin-right: 10px; height: 36px;}
+
+.profile-edit .baseinfo { margin-top:17px;}
+.profile-edit .baseinfo .row {display: block; min-height: 66px; padding-left: 130px;}
+.profile-edit .baseinfo .row i {display: inline-block; float: left; font-size: 14px; font-style: normal; margin-left: -130px; padding-top: 13px;}
+.profile-edit .baseinfo .row .link-btn {margin-bottom: 16px; display: inline-block; margin-left: 5px; font-size: 15px; cursor: pointer;}
+.profile-edit .baseinfo .item {-moz-box-sizing: content-box; color: #333; font-family: Avenir; font-size: 14px; line-height: 1em; margin-top: 2px; opacity: 0.9; padding-left: 8px; padding-right: 4px; padding-bottom: 8px; padding-top: 7px; width: 320px; margin-bottom: 8px; margin-right: 11px; border: 2px #D9D9D9 solid;}
+.profile-edit .baseinfo .mini {width: 90px;}
+.profile-edit .baseinfo .small {width: 156px;}
+.profile-edit .baseinfo select.item {}
+.profile-edit .baseinfo .highlight {border-color: #2159A6;}
+
+.profile-friend .friend-list .row {height:80px; border-bottom: 1px solid #F6F6F6;}
+.profile-friend .friend-list .row .avatar { float:left; margin-left:1px; margin-right:14px; margin-top:20px;}
+.profile-friend .friend-list .row .avatar img {width:40px; }
+.profile-friend .friend-list .row .baseinfo {
+    float: left;
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 22px;
+    line-height:1em;
+}
+.profile-friend .friend-list .row .baseinfo .nick {margin-bottom:7px; color:#003f97; }
+.profile-friend .friend-list .row .baseinfo .major {margin-bottom:10px; color:#999; font-size:13px; }
+.profile-friend .friend-list .row .mutual {
+    float: right;
+    font-size: 13px;
+    margin-right: 6px;
+    margin-top: 34px;
+}
+.profile-friend .friend-list .row .action {float:right; margin-right:19px; margin-top:25px; }
+
+
+.profile-index { }
+.profile-index { }

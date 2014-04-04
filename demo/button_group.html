@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>TextInput - A common input control</title>
+
+<link rel="stylesheet" type="text/css" href="../vm/css/bootstrap-btn.css" />
+<link rel="stylesheet" type="text/css" href="../vm/css/bootstrap-btngroup.css" />
+
+<script type="text/javascript" src="../helper/require.js"></script>
+<script type="text/javascript" src="../helper/ext_json.js"></script>
+<script type="text/javascript" src="../helper/hui.js"></script>
+<script type="text/javascript" src="../helper/hui_eventdispatcher.js"></script>
+<script type="text/javascript" src="../helper/hui_basemodel.js"></script>
+<script type="text/javascript" src="../helper/hui_control.js"></script>
+<script type="text/javascript" src="../helper/ui_buttongroup.js"></script>
+<script type="text/javascript" src="../helper/ui_textinput.js"></script>
+<script type="text/javascript" src="../helper/ui_panel.js"></script>
+<script type="text/javascript" src="../helper/ui_validator.js"></script>
+
+<script type="text/javascript">
+<!--
+
+function useCreate() {
+    hui.Control.create('ButtonGroup', {id:'price1',value:'50-100',options:['0-50','50-100','100-150','150-200','200+']});
+}
+
+function userTemplate() {
+    hui.Control.init(hui.g('aa'));
+}
+
+//-->
+</script>
+</head>
+<button type="button" onclick="alert(window.controlMap.price1.getValue())">Get selected value</button>
+<body><button type="button" onclick="useCreate()">方法一：直接Create</button><button type="button" onclick="userTemplate()">方法二：使用模板</button>
+
+<div id="aa">
+<div ui="id:'price2',type:'ButtonGroup',value:'50-100',options:['0-50','50-100','100-150','150-200','200+']" class="btn-group"></div>
+</div>
+
+</body>
+
+</html>

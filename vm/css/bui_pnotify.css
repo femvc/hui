@@ -1,0 +1,79 @@
+/*
+//    ____     ____                _   _     ____          ____      ____                   
+//  /\  __\  /\  __\    /'\_/`\  /\ \/\ \  /\  __`\      /\  __`\  /\  __`\    /'\_/`\      
+//  \ \ \_/_ \ \ \_/_  /\      \ \ \ \ \ \ \ \ \ \_\     \ \ \ \_\ \ \ \ \ \  /\      \     
+//   \ \  __\ \ \  __\ \ \ \_/\_\ \ \ \ \ \ \ \ \  __     \ \ \  __ \ \ \ \ \ \ \ \_/\_\    
+//    \ \ \_/  \ \ \_/_ \ \ \\ \ \ \ \ \_/ \ \ \ \_\ \  __ \ \ \_\ \ \ \ \_\ \ \ \ \\ \ \   
+//     \ \_\    \ \____/ \ \_\\ \_\ \ `\___/  \ \____/ /\_\ \ \____/  \ \_____\ \ \_\\ \_\  
+//      \/_/     \/___/   \/_/ \/_/  `\/__/    \/___/  \/_/  \/___/    \/_____/  \/_/ \/_/  
+//                                                                                          
+*/                                                                                          
+.fade {
+    opacity: 1;
+    transition: opacity 0.15s linear 0s;
+}
+
+.ui-pnotify {
+    height: auto;
+    position: absolute;
+    right: 25px;
+    top: 55px;
+    z-index: 9999;
+}
+html > body .ui-pnotify {
+    position: fixed;
+}
+.ui-pnotify .ui-pnotify-shadow {
+    box-shadow: 0 2px 10px rgba(50, 50, 50, 0.5);
+}
+.ui-pnotify-container {
+    background-position: 0 0;
+    height: 100%;
+    margin: 0;
+    padding: 11px;
+    color: #C09853;
+    background-color: #FCF8E3;
+}
+.ui-pnotify-sharp {
+    border-radius: 0 0 0 0;
+}
+.ui-pnotify-closer, .ui-pnotify-sticker {
+    float: right;
+    margin-left: 0.2em;
+}
+.ui-pnotify-title {
+    display: block;
+    margin-bottom: 0.4em;
+}
+.ui-pnotify-text {
+    display: block;
+    width: 200px;
+}
+.ui-pnotify-icon, .ui-pnotify-icon span {
+    display: block;
+    float: left;
+    margin-right: 0.2em;
+}
+.ui-pnotify-history-container {
+    border-top: medium none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    padding: 0;
+    position: absolute;
+    right: 18px;
+    top: 0;
+    width: 70px;
+    z-index: 10000;
+}
+.ui-pnotify-history-container .ui-pnotify-history-header {
+    padding: 2px;
+}
+.ui-pnotify-history-container button {
+    cursor: pointer;
+    display: block;
+    width: 100%;
+}
+.ui-pnotify-history-container .ui-pnotify-history-pulldown {
+    display: block;
+    margin: 0 auto;
+}

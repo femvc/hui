@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>TextInput - A common input control</title>
+<script type="text/javascript" src="../helper/require.js"></script>
+<script type="text/javascript" src="../helper/ext_json.js"></script>
+<script type="text/javascript" src="../helper/hui.js"></script>
+<script type="text/javascript" src="../helper/hui_eventdispatcher.js"></script>
+<script type="text/javascript" src="../helper/hui_basemodel.js"></script>
+<script type="text/javascript">
+<!--
+var data;
+//var haiyang = {controlMap:{}};
+function doit() {
+    data = new hui.BaseModel();
+    data.set('a', 123);
+    data.on('change:a', function (oldValue, newValue) {
+        console.log(oldValue + ' = ' +newValue);
+    });
+    data.set('a', 1234);
+}
+
+//-->
+</script>
+</head>
+
+<body>
+
+<button type="button" onclick="doit()">Create</button>
+<!--
+<script type="text/javascript">
+function doit() {
+    hui.Control.init(document.getElementById('aa'),{}/*,haiyang*/);
+    alert('Finish');
+}
+</script>
+<div id="aa">
+<input type="text" ui="type:'TextInput',id:'gg'" />
+<button type="button" onclick="alert(hui.window.controlMap&&hui.window.controlMap.gg?'Success':'Not exist.')">Get Control</button>
+
+</div-->
+</body>
+
+</html>
