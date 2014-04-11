@@ -17,29 +17,19 @@
  */
 define('./hui.Control', ['./JSON', './hui', './hui.EventDispatcher'], function(){
 
-hui.Control = function (options, pending) {
+hui.Control = function (options, pending) {this.vb = vbObj();
     hui.EventDispatcher.call(this);
     
     // 状态列表
     this.state = {};
     // 初始化参数
-    this.initOptions( options );
+    this.initOptions(options);
     // 生成控件id
     if ( !this.id ) {
         this.id = hui.Control.makeGUID(this.formName);
     }
     
-    // parentControl父控件不传则默认为window对象
-    // parentControl父控件默认为window对象, 不是的话后面会再改回来. 
-    // var parentControl = hui.window;
-    // Add: 上面这样做静态没问题，动态生成appendSelfTo就会出问题，因此需要加上options.parentControl
-    // Fixme: 第二次执行到这里hui.Action.get()居然是前一个action？
-    var parentControl = options.parentControl || hui.window;
-    parentControl.controlMap = parentControl.controlMap || {};
-    
-    // 默认为根控件,若不是则会在后面render时覆盖parentControl属性
-    parentControl.controlMap[ this.id ] = this;
-    this.parentControl = parentControl;
+    hui.Control.appendControl(options.parentControl, this);
     
     // 子类调用此构造函数不可以立即执行!!只能放在子类的构造函数中执行!否则实例化时找不到子类中定义的属性!
     // 进入控件处理主流程!
@@ -158,10 +148,10 @@ hui.Control.prototype = {
     render: function() {
         var me = this,
             elem = me.getMain();
-        if (elem && elem.getAttribute(hui.env+'_initView') != 'true') {
+        if (elem && elem.getAttribute('_initView') != 'true') {
             hui.Control.addClass(elem, me.getClass());
             me.initView();
-            elem.setAttribute(hui.env+'_initView', 'true');
+            elem.setAttribute('_initView', 'true');
         }
     },
     /**
@@ -269,25 +259,25 @@ hui.Control.prototype = {
      */
     setValueByTree:   function (paramMap) {
         var me = this,
-            control;
+            ctr;
         if (me.controlMap && paramMap) {
             for (var formName in paramMap) {
-                control = me.controlMap[formName] || me.getByFormName(formName);
-                if (!control) {continue;}
-                if (control.constructor && 
-                    control.constructor.prototype && 
-                    control.constructor.prototype.hasOwnProperty && 
-                    control.constructor.prototype.hasOwnProperty('setValue')){
+                ctr = me.controlMap[formName] || me.getByFormName(formName);
+                if (!ctr) {continue;}
+                if (ctr.constructor && 
+                    ctr.constructor.prototype && 
+                    ctr.constructor.prototype.hasOwnProperty && 
+                    ctr.constructor.prototype.hasOwnProperty('setValue')){
                     
-                    control.setValue(paramMap[formName]);
+                    ctr.setValue(paramMap[formName]);
                 }
-                else if (control.getMain || control.main) {
-                    (control.getMain ? control.getMain() : hui.dom.getElementById(control.main)).value = paramMap[formName];
+                else if (ctr.getMain || ctr.main) {
+                    (ctr.getMain ? ctr.getMain() : hui.dom.getElementById(ctr.main)).value = paramMap[formName];
                 }
-                else if (control.controlMap) {
-                    control.setValueByTree(paramMap[formName]);
+                else if (ctr.controlMap) {
+                    ctr.setValueByTree(paramMap[formName]);
                 }
-                control = null;
+                ctr = null;
             }
         }
     },
@@ -298,24 +288,24 @@ hui.Control.prototype = {
     getParamMap: function() {
         var me = this,
             paramMap = {},
-            control,
+            ctr,
             formName;
         // 如果有子控件建议递归调用子控件的getValue!!
         if (me.controlMap) {
             for (var i in me.controlMap) {
                 if (!me.controlMap[i]) {continue;}
                 
-                control = me.controlMap[i];
-                formName = hui.Control.prototype.getFormName.call(control);
+                ctr = me.controlMap[i];
+                formName = hui.Control.prototype.getFormName.call(ctr);
                 
-                if (control.getValue && String(control.isFormItem) !== 'false') {
-                    paramMap[formName] = control.getValue();
+                if (ctr.getValue && String(ctr.isFormItem) !== 'false') {
+                    paramMap[formName] = ctr.getValue();
                 }
-                else if (control.getMain || control.main) {
-                    paramMap[formName] = (control.getMain ? control.getMain() : hui.dom.getElementById(control.main)).value;
+                else if (ctr.getMain || ctr.main) {
+                    paramMap[formName] = (ctr.getMain ? ctr.getMain() : hui.dom.getElementById(ctr.main)).value;
                 }
-                else if (control.controlMap){
-                    paramMap[formName] = control.getParamMap();
+                else if (ctr.controlMap){
+                    paramMap[formName] = ctr.getParamMap();
                 }
             }
         }
@@ -355,50 +345,6 @@ hui.Control.prototype = {
         this.getMain().style.display = 'none';
     },
     /**
-     * @name 获取控件状态
-     * @protected
-     * @param {String} state 要获取的状态.
-     * @return {boolean|Null}
-     */
-    getState: function(state) {
-        if (!this.state) {
-            this.state = {};
-        }
-        return !!this.state[state];
-    },
-    /**
-     * @name 设置控件的当前状态
-     * @protected
-     * @param {String} state 要设置的状态.
-     */
-    setState: function(state) {
-        var me = this, 
-            main=me.getMain();
-        if (!me.state) {
-            me.state = {};
-        }
-        
-        me.state[state] = 1;
-        hui.Control.addClass(main, me.getClass(state));
-    },
-    /**
-     * @name 移除控件的当前状态
-     * @protected
-     * @param {String} state 要移除的状态.
-     */
-    removeState: function(state) {
-        var me = this,
-            main = me.getMain();
-        if (!me.state) {
-            me.state = {};
-        }
-        
-        me.state[state] = undefined;
-        delete me.state[state];
-        
-        hui.Control.removeClass(main, me.getClass(state));
-    },
-    /**
      * @name 设置控件不可用状态
      * @public
      * @param {Boolean} disabled
@@ -407,7 +353,6 @@ hui.Control.prototype = {
         if (typeof disabled === 'undefined') {
             disabled = true;
         }
-        disabled ? this.setState('disabled') : this.removeState('disabled');
         this.getMain().disabled = disabled;
     },
     /**
@@ -419,7 +364,6 @@ hui.Control.prototype = {
         if (typeof readOnly === 'undefined') {
             readOnly = true;
         }
-        readOnly ? this.setState('readonly') : this.removeState('readonly');
         this.getMain().readOnly = readOnly;
     },
     /**
@@ -428,10 +372,10 @@ hui.Control.prototype = {
      * @return {boolean}
      */
     isDisabled: function () {
-        return this.getState('disabled');
+        return this.getMain().disabled;
     },
     isReadonly: function() {
-        return this.getState('readonly');
+        return this.getMain().readOnly;
     },
     /**
      * @name 设置控件width和height
@@ -548,50 +492,6 @@ hui.Control.prototype = {
         }
     },
     /**
-     * @name 挂载到父dom节点中,注: 通过调用hui.Control.appendControl实现
-     * @param {Element} wrap 父dom节点.
-     */
-    appendSelfTo : function(wrap) {
-        var uiObj = this,
-            elem = wrap,
-            control,
-            container = hui.dom.body ? hui.dom.body : hui.dom.documentElement,
-            main;
-        if (wrap && wrap.appendChild && wrap.childNodes) {
-            while(elem && elem.tagName && String(elem.tagName).toLowerCase()!='body'){
-                // label标签自带control属性!!
-                if (elem && elem.getAttribute && elem.control && Object.prototype.toString.call(elem.control)==='[object String]') {
-                    control = hui.Control.getById(elem.control);
-                    // 将控件从临时容器移动到指定控件下
-                    hui.Control.appendControl(control, uiObj);
-                    break;
-                }
-                else {
-                    elem = elem.parentNode;
-                }
-            }
-            
-            if (uiObj.getMain()) {
-                wrap.appendChild(uiObj.getMain());
-            }
-        }
-        else if (wrap && wrap.controlMap) {
-            hui.Control.appendControl(wrap, uiObj);
-            main = uiObj.getMain();
-            if (main) {
-                control = wrap;
-                while (control) {
-                    container = control.getMain();
-                    if (container) {
-                        break;
-                    }
-                    control = control.parentControl;
-                }
-                container.appendChild(main);
-            }
-        }
-    },
-    /**
      * @name Control的主要处理流程
      * @protected
      * @param {Object} argMap arg表.
@@ -605,71 +505,70 @@ hui.Control.prototype = {
         
         // 注：默认增加一个空元素作为控件主元素!
         elem = (uiObj.getMain ? uiObj.getMain() : null) || (uiObj.createMain ? uiObj.createMain() : hui.Control.prototype.createMain.call(uiObj));
+        if (!elem) { return hui.Control.error('Control\'s main element is invalid'); }
         
-        if ( elem ) {
-            // 便于通过elem.control找到control
-            elem.control = uiObj.getId ? uiObj.getId() : uiObj.id;
-            // 动态生成control需手动维护me.parentControl
-            // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
-            parentElement = elem;
-            while(parentElement && parentElement.tagName && parentElement.parentNode){
-                parentElement = parentElement.parentNode;
-                //label标签自带control属性!!
-                if (parentElement && parentElement.getAttribute && parentElement.control  && Object.prototype.toString.call(parentElement.control)==='[object String]') {
-                    control = hui.Control.getById(parentElement.control, parentControl);
-                    hui.Control.appendControl(control, uiObj);
-                    break;
-                }
-                // 未找到直接父控件则将control从hui.window.controlMap移动到action.controlMap中
-                if (~'html,body'.indexOf(String(parentElement.tagName).toLowerCase())) {
-                    if (hui && hui.Action && hui.Action.get()) {
-                        control = hui.Action.get();
-                        hui.Control.appendControl(control, uiObj);
-                    }
-                    break;
-                }
+        // 便于通过elem.control找到control
+        elem.control = uiObj.getId ? uiObj.getId() : uiObj.id;
+        // 动态生成control需手动维护me.parentControl
+        // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
+        parentElement = elem;
+        while (parentElement && parentElement.tagName && parentElement.parentNode){
+            parentElement = parentElement.parentNode;
+            //label标签自带control属性!!
+            if (parentElement && hui.Control.isControlMain(parentElement)) {
+                control = hui.Control.getById(parentElement.control, parentControl);
+                hui.Control.appendControl(control, uiObj);
+                break;
             }
-            
-            // hui.Control.elemList.push(uiObj);
-            // 设计用来集中缓存索引,最后发现不能建,建了垃圾回收会有问题!!
-            
-            // 每个控件渲染开始的时间。
-            uiObj.startRenderTime = new Date();
-            // 1. initView()会在render调用父类的render时自动调用，
-            // 2. 不管是批量hui.Control.init()还是hui.Control.create(), 都会通过enterControl来执行render
-            // 3. initBehavior()会在后面执行
-            if (elem && elem.getAttribute && elem.getAttribute(hui.env+'_initView') != 'true' && uiObj.render){
-                uiObj.render();
-            }
-            /*注: 如果isRendered为false则默认调用父类的渲染函数,子类的render中有异步情况需特殊处理!
-            if (!uiObj.isRendered){
-                uiObj.constructor.superClass.prototype.render.call(uiObj);
-            }
-            //注释掉的原因：调用父类的render应该由子类自己决定!
-            */
-            var uiAttr = hui.Control.UI_ATTRIBUTE || 'ui';
-            // 解除obj对DOM的引用!
-            // uiObj.main = elem.getAttribute('id'); // elem.getAttribute('id')无法取到id的
-            
-            //注释掉原因,导出到browser的html中不能还原! 
-            //elem.setAttribute('_' + uiAttr, elem.getAttribute(uiAttr));
-            //elem.removeAttribute(uiAttr);
-            
-            uiObj.endRenderTime = new Date();
-            
-            if (uiObj.initBehaviorByTree) {
-                uiObj.initBehaviorByTree();
-            }
-            else if (uiObj.initBehavior) {
-                uiObj.initBehavior();
-            }
-            
-            uiObj.endInitBehaviorTime = new Date();
-
-            if (uiObj.isFormItem === false) {
-                uiObj.getValue = null;
+            // 未找到直接父控件则将control从hui.window.controlMap移动到action.controlMap中
+            else if (~'html,body'.indexOf(String(parentElement.tagName).toLowerCase())) {
+                hui.Control.appendControl(null, uiObj);
+                break;
             }
         }
+        
+        // hui.Control.elemList.push(uiObj);
+        // 设计用来集中缓存索引,最后发现不能建,建了垃圾回收会有问题!!
+        
+        // 每个控件渲染开始的时间。
+        uiObj.startRenderTime = new Date();
+        // 1. initView()会在render调用父类的render时自动调用，
+        // 2. 不管是批量hui.Control.init()还是hui.Control.create(), 都会通过enterControl来执行render
+        // 3. initBehavior()会在后面执行
+        if (elem && elem.getAttribute && elem.getAttribute('_initView') != 'true' && uiObj.render){
+            uiObj.render();
+        }
+        
+        /*注: 如果isRendered为false则默认调用父类的渲染函数,子类的render中有异步情况需特殊处理!
+        if (!uiObj.isRendered){
+            uiObj.constructor.superClass.prototype.render.call(uiObj);
+        }
+        //注释掉的原因：调用父类的render应该由子类自己决定!
+        */
+        
+        // 解除obj对DOM的引用!
+        // uiObj.main = elem.getAttribute('id'); // elem.getAttribute('id')无法取到id的
+        
+        //注释掉原因,导出到browser的html中不能还原! 
+        //var uiAttr = hui.Control.UI_ATTRIBUTE || 'ui';
+        //elem.setAttribute('_' + uiAttr, elem.getAttribute(uiAttr));
+        //elem.removeAttribute(uiAttr);
+        
+        uiObj.endRenderTime = new Date();
+        
+        if (uiObj.initBehaviorByTree) {
+            uiObj.initBehaviorByTree();
+        }
+        else if (uiObj.initBehavior) {
+            uiObj.initBehavior();
+        }
+        
+        uiObj.endInitBehaviorTime = new Date();
+
+        if (uiObj.isFormItem === false) {
+            uiObj.getValue = null;
+        }
+        
     },
     /**
      * @name 生成DOM
@@ -718,12 +617,81 @@ hui.Control.makeGUID = (function(){
 hui.Control.makeElemGUID = (function(){
     var guid = 1;
     return function(formName){
-        return '_' + hui.formatDate(new Date(), 'yyyyMMdd_HHmm') + '_' + ( guid++ );
+        return '_' + hui.Control.formatDate(new Date(), 'yyyyMMdd_HHmm') + '_' + ( guid++ );
     };
 })();
- 
 /**
- * @name 初始化控件渲染
+ * @name 解析自定义ui属性
+ * @public
+ * @param {String} attrStr ui属性
+ * @param {Hashmap} opt_propMap 数据model
+ * @return {Hashmap}
+ */
+hui.Control.parseCustomAttribute = function (attrStr, opt_propMap) {
+    var attrStr = '{' + attrStr + '}',
+        attrs,
+        attrValue,
+        attrName;
+            
+    // 解析ui属性
+    attrs = (new Function('return ' + attrStr))();
+    // 是否是默认生成的
+    attrs['bocument'] = hui.dom == hui.bocument ? 'bocument' : null;
+    for (var j in attrs) {
+        // 通过@定义的需要到传入的model中找
+        attrValue = attrs[j];
+        if (attrValue && typeof attrValue == 'string' && attrValue.indexOf('@') === 0) {
+            attrName = attrValue.substr(1);
+            
+            attrValue = opt_propMap&&opt_propMap.get ? opt_propMap.get(attrName) : opt_propMap[attrName];
+            // 默认读取opt_propMap中的,没有再到全局context中取,防止强耦合.
+            if (attrValue === undefined) { 
+                attrValue = hui.Control.getExtClass('hui.context').get(attrName);
+            }
+            attrs[j] = attrValue;
+        }
+    }
+    
+    return attrs;
+}
+
+/**
+ * @name 判断一个解析前DOM元素是否是子控件，是则跳过非父控件的hui.Control.init()
+ * @public
+ * @param {String} elem DOM元素
+ */
+hui.Control.isChildControl = function (elem, list) {
+    var result = false;
+    // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
+    while (elem && elem.tagName && elem.parentNode) {
+        elem = elem.parentNode;
+        // 未找到直接父控件则将control从hui.window.controlMap移动到action.controlMap中
+        if (~'html,body'.indexOf(String(elem.tagName).toLowerCase()) == -1) break;
+        for (var i=0,len=list.length; i<len; i++) {
+            if (list[i] == elem) {
+                result = true;
+                break;
+            }
+        }
+    }
+    return result;
+};
+
+/**
+ * @name 判断一个解析前DOM元素是否已解析控件
+ * @public
+ * @param {String} elem DOM元素
+ */
+hui.Control.isControlMain = function (elem) {
+    var result = false;
+    if (elem && elem.getAttribute && elem.control  && Object.prototype.toString.call(elem.control)==='[object String]') {
+        result = true;
+    }
+    return result;
+};
+                
+/**
+ * @name 批量生成控件
  * @public
  * @param {HTMLElement} opt_wrap 渲染的区域容器元素
  * @param {Object}      opt_propMap 控件需要用到的数据Model{@key}
@@ -752,11 +720,10 @@ hui.Control.init = function ( opt_wrap, opt_propMap, parentControl ) {
     parentControl = parentControl || (hui.dom == hui.bocument ? hui.window : window);
     parentControl.controlMap = parentControl.controlMap || {};
     
+    
     var uiAttr = hui.Control.UI_ATTRIBUTE || 'ui';
     var realEls = [], uiEls = [];
-    var attrs, attrStr, attrArr, attrArrLen, attrSegment;
-    var attr, attrName, attrValue, extraAttrMap;
-    var elem, objId, control, isChildControl;
+    var elem, objId, control;
     
     // 把dom元素存储到临时数组中
     // 控件渲染的过程会导致elements的改变
@@ -773,47 +740,20 @@ hui.Control.init = function ( opt_wrap, opt_propMap, parentControl ) {
     for (var i=0,len=uiEls.length; i<len; i++) {
         elem = uiEls[i];
         if (!hui.Control.isChildControl(elem, uiEls)) {
-            attrStr = elem.getAttribute(uiAttr);
-            attrStr = '{' + attrStr + '}';
             
-            // 解析ui属性
-            attrs = (new Function('return '+attrStr))();
-            // 是否是默认生成的
-            attrs['bocument'] = hui.dom == hui.bocument ? 'bocument' : null;
-            for (var j in attrs) {
-                // 通过@定义的需要到传入的model中找
-                attrValue = attrs[j];
-                if (attrValue && typeof attrValue == 'string' && attrValue.indexOf('@') === 0) {
-                    attrName = attrValue.substr(1);
-                    
-                    attrValue = opt_propMap&&opt_propMap.get ? opt_propMap.get(attrName) : opt_propMap[attrName];
-                    // 默认读取opt_propMap中的,没有再到全局context中取,防止强耦合.
-                    if (attrValue === undefined) { 
-                        attrValue = hui.Control.getExtClass('hui.context').get(attrName);
-                    }
-                    attrs[j] = attrValue;
-                }
-            }
+            control = hui.Control.create(elem, {parentControl: parentControl});
             
-            // 创建并渲染控件
-            objId = attrs[ 'id' ];
-            if ( !objId ) {
-                objId = hui.Control.makeGUID(attrs['formName']);
-                attrs[ 'id' ] = objId;
-            }           
-            /*extraAttrMap = opt_propMap[ objId ];
-            // 将附加属性注入
-            for ( k in extraAttrMap ) {
-                attrs[ k ] = attrs[ k ] || extraAttrMap[ k ];
-            }*/
+            /*var attrStr = elem.getAttribute(uiAttr);
+            
+            var attrs = hui.Control.parseCustomAttribute(attrStr, opt_propMap);
             
             // 主元素参数初始化
             if(attrs.main          == undefined && elem)          {attrs.main = elem.id ? elem.id : hui.Control.makeElemGUID(); elem.id = attrs.main;}
             if(attrs.parentControl == undefined && parentControl) {attrs.parentControl = parentControl;}
             // 生成控件 //这里的parentControl, elem不能去掉!!否则在后面的enterControl理会重复生成elem!!! 
-            //control = hui.Control.create( attrs[ 'type' ], attrs, parentControl, elem);
+            //control = hui.Control.create( options[ 'type' ], options, parentControl, elem);
             //放在了上上一行,故去掉了parentControl, elem
-                        
+             
             control = hui.Control.create( attrs[ 'type' ], attrs);
             /**
              * 保留ui属性便于调试与学习
@@ -826,103 +766,95 @@ hui.Control.init = function ( opt_wrap, opt_propMap, parentControl ) {
 };
 
 /**
- * @name 判断一个解析前DOM元素是否是子控件，是则跳过非父控件的hui.Control.init()
- * @public
- * @param {String} elem DOM元素
- */
-hui.Control.isChildControl = function (elem, list) {
-    var result = false;
-    // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
-    while (elem && elem.tagName && elem.parentNode) {
-        elem = elem.parentNode;
-        // 未找到直接父控件则将control从hui.window.controlMap移动到action.controlMap中
-        if (~'html,body'.indexOf(String(elem.tagName).toLowerCase()) == -1) break;
-        for (var i=0,len=list.length; i<len; i++) {
-            if (list[i] == elem) {
-                result = true;
-                break;
-            }
-        }
-    }
-    return result;
-};
-
-/**
- * @name 创建控件对象
+ * @name 创建一个控件对象
  * @public
  * @param {String} type 控件类型
  * @param {Object} options 控件初始化参数
  * @return {hui.Control} 创建的控件对象
  */
-hui.Control.create = function ( type, options) {
+hui.Control.create = function (type, options) { 
+    // 注：扩展一下，直接支持hui.Control.create(Element);
+    if (type && Object.prototype.toString.call(type) != '[object String]' && type.getAttribute) {
+        options = options || {};
+        if (hui.Control.isControlMain(type)) {
+            var control = hui.Control.getById(type.control);
+            if (control) { hui.Control.appendControl(options.parentControl, control); }
+        }
+        
+        var attrs = hui.Control.parseCustomAttribute(type.getAttribute(hui.Control.UI_ATTRIBUTE || 'ui'));
+        type.id = type.id || hui.Control.makeElemGUID();
+        attrs.main = type.id;
+        
+        for (var i in options) {
+            if (i) { attrs[i] = attrs[i] !== undefined ? attrs[i] : options[i]; }
+        }
+        
+        return hui.Control.create(attrs['type'], attrs);
+    }
+    
     options = options || {};
+    
+    // 注：创建并渲染控件，每个控件必须有id
+    var objId = options.id;
+    if (!objId) {
+        objId = hui.Control.makeGUID(options['formName']);
+        options.id = objId;
+    }
     
     // [nodejs&browser]
     hui.dom = options['bocument'] == 'bocument' || (options['main'] && hui.dom.getElementById(options['main']).setInnerHTML) ? hui.bocument : document;
     
-    var uiClazz = hui[ type ],
-        objId   = options.id || hui.Control.makeGUID(options.formName),
-        uiObj   = null,
-        elem,
-        control,
-        k;
-    if (!uiClazz && window && window.console && window.console.error) {
-        window.console.error('"ui_' + String(type).toLowerCase() + '.js" is not loaded successfully.')
+    var uiClazz = hui[type];
+    if (!uiClazz) {
+        hui.Control.error('"ui_' + String(type).toLowerCase() + '.js" is not loaded successfully.')
     }
     
-    if ( objId !== undefined && objId !== null && objId !== '' && uiClazz ) {
-        // 1. 模版批量生成控件时，options里一般没有m ain，m ain指向元素自身! //注:已改成默认有m ain
-        // 2. new的方式创建控件时，options里一般有m ain!
-        // 在这里设置m ain属性注意不能覆盖new uiClazz(options)的设置,也便于后面render时重新设置
-        //if(options.m ain == undefined && m ain) {options.m ain = m ain;}//注:已移动到hui.Control.init中了
-        
-        // 设置临时parentControl放置子控件//注释掉原因:创建控件默认放在hui.window下//放到hui.Control.init中了
-        //if(options.parentControl == undefined && parentControl) {options.parentControl = parentControl;}
+    // 1. 模版批量生成控件时，options里一般没有m ain，m ain指向元素自身! //注:已改成默认有m ain
+    // 2. new的方式创建控件时，options里一般有m ain!
+    // 在这里设置m ain属性注意不能覆盖new uiClazz(options)的设置,也便于后面render时重新设置
+    //if(options.m ain == undefined && m ain) {options.m ain = m ain;}//注:已移动到hui.Control.init中了
+    
+    // 设置临时parentControl放置子控件//注释掉原因:创建控件默认放在hui.window下//放到hui.Control.init中了
+    //if(options.parentControl == undefined && parentControl) {options.parentControl = parentControl;}
+    // 创建控件对象
+    
+    var uiObj = new uiClazz(options);
+    uiObj.id = uiObj.id || objId;
+    
+    /*Hack方式不利于理解程序，所以去掉!!*/
         /**
-         * 创建控件对象
-         */
-        if (!options.parentControl) {
-            options.parentControl = (hui.Action && hui.Action.get ? 
-                (hui.Action.get(options.parentControl) || hui.Action.get()) : 
-                (options['bocument'] == 'bocument' ? hui.window : window));
+         * 调用父类的构造函数
+         *
+        hui.Control.call( uiObj, options );
+        /**
+         * 再次调用子类的构造函数
+         * 
+         * @comment 这里为什么不直接放到new uiClazz(options)里呢? 因为调用父类的构造函数会被覆盖掉.
+         *
+        uiClazz.call( uiObj, options );/*已废弃*
+        /**/
+        /*uiObj.clazz = uiClazz;// 已经使用this.constructor代替*/
+    /*
+    // 加到父控件的controlMap中
+    if (!((uiObj.parentControl && uiObj.parentControl.controlMap && uiObj.parentControl.controlMap[objId] == uiObj) &&
+        (uiObj.getId && uiObj.getId() !== objId) || (uiObj.id !== objId))) {
+        
+        if (uiObj.parentControl && uiObj.parentControl.controlMap && uiObj.parentControl.controlMap[objId] !== uiObj) {
+            hui.Control.appendControl(uiObj.parentControl, uiObj);
+            //uiObj.parentControl.controlMap[objId] = uiObj;
         }
-        options.id = objId;
-        
-        uiObj = new uiClazz(options);
-        uiObj.id = uiObj.id || objId;
-        
-        /*Hack方式不利于理解程序，所以去掉!!*/
-            /**
-             * 调用父类的构造函数
-             *
-            hui.Control.call( uiObj, options );
-            /**
-             * 再次调用子类的构造函数
-             * 
-             * @comment 这里为什么不直接放到new uiClazz(options)里呢? 因为调用父类的构造函数会被覆盖掉.
-             *
-            uiClazz.call( uiObj, options );/*已废弃*
-            /**/
-            /*uiObj.clazz = uiClazz;// 已经使用this.constructor代替*/
-        
-        // 加到父控件的controlMap中
-        if (!((uiObj.parentControl && uiObj.parentControl.controlMap && uiObj.parentControl.controlMap[objId] == uiObj) &&
-            (uiObj.getId && uiObj.getId() !== objId) || (uiObj.id !== objId))) {
-            
-            if (uiObj.parentControl && uiObj.parentControl.controlMap && uiObj.parentControl.controlMap[objId] !== uiObj) {
-                uiObj.parentControl.controlMap[objId] = uiObj;
-            }
-            else if (options.parentControl && options.parentControl.controlMap && options.parentControl.controlMap[objId] !== uiObj) {
-                options.parentControl.controlMap[objId] = uiObj;
-            }
-        }
-
-        // 检查是否有 enterControl 方法
-        if (!uiObj.enterControl) {
-            hui.extend(uiObj, hui.Control.prototype);
-            uiObj.enterControl();
+        else if (options.parentControl && options.parentControl.controlMap && options.parentControl.controlMap[objId] !== uiObj) {
+            hui.Control.appendControl(options.parentControl, uiObj);
+            //options.parentControl.controlMap[objId] = uiObj;
         }
     }
+    */
+    // 检查是否有 enterControl 方法
+    if (!uiObj.enterControl) {
+        hui.extend(uiObj, hui.Control.prototype);
+        uiObj.enterControl();
+    }
+    
 
     return uiObj;
 };
@@ -933,9 +865,17 @@ hui.Control.create = function ( type, options) {
  * @param {Control} uiObj 子控件.
  */
 hui.Control.appendControl = function(parent, uiObj) {
+    // parentControl父控件不传则默认为window对象
+    // parentControl父控件默认为window对象, 不是的话后面会再改回来. 
+    // var parentControl = hui.window;
+    // Add: 上面这样做静态没问题，动态生成appendSelfTo就会出问题，因此需要加上options.parentControl
+    // Fixme: 第二次执行到这里hui.Action.get()居然是前一个action？
+    parent = parent || hui.window;
+    parent.controlMap = parent.controlMap || {};
+    
     var ctrId = uiObj.getId ? uiObj.getId() : uiObj.id,
         parentControl;
-    
+    // 注：从原来的父控件controlMap中移除
     if (uiObj.parentControl && uiObj.parentControl.controlMap) {
         uiObj.parentControl.controlMap[ctrId] = undefined;
         delete uiObj.parentControl.controlMap[ctrId];
@@ -946,7 +886,7 @@ hui.Control.appendControl = function(parent, uiObj) {
     // 重置parentControl标识
     uiObj.parentControl = parent;
     
-    // 
+    
 };
 
 /**
@@ -1017,9 +957,7 @@ hui.Control.findAllControl = function(parentControl){
     if(elements.length>0) elements.shift();
     return elements;
 };
-/**
- * @name 所有控件实例的索引. 注释掉原因: 建了索引会造成无法GC内存暴涨!
- */
+// 所有控件实例的索引. 注释掉原因: 建了索引会造成无法GC内存暴涨!
 // hui.Control.elemList = [];
 
 /**
@@ -1149,28 +1087,50 @@ hui.Control.checkParentNode = function (control, parentNode) {
  * @returns {HTMLElement} 目标元素
  */
 hui.Control.addClass = function (element, className) {
-    hui.Control.removeClass(element, className);
-    element.className = (element.className +' '+ className).replace(/(\s)+/ig," ");
-    return element;
-};
-hui.Control.removeClass = function(element, className) {
-    var list = className.replace(/\s+/ig, ' ').split(' '),
-        str = element.className||'';
-    var i,len,k,v;
-    for (i=0,len=list.length; i < len; i++){
-         str = (" "+str.replace(/(\s)/ig,"  ")+" ").replace(new RegExp(" "+list[i]+" ","g")," ");
+    if (~'[object Array][object NodeList]'.indexOf(Object.prototype.toString.call(element))) {
+        for (var i=0,len=element.length; i<len; i++) {
+            hui.Control.addClass(element[i], className);
+        }
     }
-    str = str.replace(/(\s)+/ig," ");
-    str = str.replace(/^(\s)+/ig,'').replace(/(\s)+$/ig,'');
-    element.className = str;
+    else if (element) {      
+        hui.Control.removeClass(element, className);
+        element.className = (element.className +' '+ className).replace(/(\s)+/ig,' ');
+    }
     return element;
 };
+// Support * and ?, like hui.Control.removeClass(elem, 'daneden-*');
+hui.Control.removeClass = function(element, className) {
+    if (~'[object Array][object NodeList]'.indexOf(Object.prototype.toString.call(element))) {
+        for (var i=0,len=element.length; i<len; i++) {
+            hui.Control.removeClass(element[i], className);
+        }
+    }
+    else if (element) {
+        var list = className.replace(/\s+/ig, ' ').split(' '),
+            /* Attention: str need two spaces!! */
+            str = (' ' + (element.className || '').replace(/(\s)/ig, '  ') + ' '),
+            name,
+            rex;
+        // 用list[i]移除str
+        for (var i=0,len=list.length; i < len; i++){
+            name = list[i];
+            name = name.replace(/(\*)/g,'\\S*').replace(/(\?)/g,'\\S?');
+            rex = new RegExp(' '+name + ' ', 'ig');
+            str = str.replace(rex, ' ');
+        }
+        str = str.replace(/(\s)+/ig,' ');
+        str = str.replace(/^(\s)+/ig,'').replace(/(\s)+$/ig,'');
+        element.className = str;
+    }
+    return element;
+};
+
 /**
  * @name 对目标字符串进行格式化
  * @public
  * @param {String} source 目标字符串
  * @param {Object|String...} opts 提供相应数据的对象或多个字符串
- * @returns {String} 格式化后的字符串
+ * @return {String} 格式化后的字符串
  */
 hui.Control.format = function (source, opts) {
     source = String(source);
@@ -1190,6 +1150,44 @@ hui.Control.format = function (source, opts) {
         });
     }
     return source;
+};
+
+
+
+hui.Control.formatDate = function(date, fmt) {      
+    if(!date) date = new Date(); 
+    fmt = fmt||'yyyy-MM-dd HH:mm'; 
+    var o = {      
+    "M+" : date.getMonth()+1, //月份      
+    "d+" : date.getDate(), //日      
+    "h+" : date.getHours()%12 == 0 ? 12 : date.getHours()%12, //小时      
+    "H+" : date.getHours(), //小时      
+    "m+" : date.getMinutes(), //分      
+    "s+" : date.getSeconds(), //秒      
+    "q+" : Math.floor((date.getMonth()+3)/3), //季度      
+    "S" : date.getMilliseconds() //毫秒      
+    };      
+    var week = {      
+    "0" : "/u65e5",      
+    "1" : "/u4e00",      
+    "2" : "/u4e8c",      
+    "3" : "/u4e09",      
+    "4" : "/u56db",      
+    "5" : "/u4e94",      
+    "6" : "/u516d"     
+    };      
+    if(/(y+)/.test(fmt)){      
+        fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));      
+    }      
+    if(/(E+)/.test(fmt)){      
+        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[date.getDay()+""]);      
+    }      
+    for(var k in o){      
+        if(new RegExp("("+ k +")").test(fmt)){      
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));      
+        }      
+    }      
+    return fmt;      
 };
 
 /*  
@@ -1242,43 +1240,22 @@ hui.Control.parseDate = function(str){
     return (new Date(str));   
 };
 
-hui.Control.formatDate = function(date, fmt) {      
-    if(!date) date = new Date(); 
-    fmt = fmt||'yyyy-MM-dd HH:mm'; 
-    var o = {      
-    "M+" : date.getMonth()+1, //月份      
-    "d+" : date.getDate(), //日      
-    "h+" : date.getHours()%12 == 0 ? 12 : date.getHours()%12, //小时      
-    "H+" : date.getHours(), //小时      
-    "m+" : date.getMinutes(), //分      
-    "s+" : date.getSeconds(), //秒      
-    "q+" : Math.floor((date.getMonth()+3)/3), //季度      
-    "S" : date.getMilliseconds() //毫秒      
-    };      
-    var week = {      
-    "0" : "/u65e5",      
-    "1" : "/u4e00",      
-    "2" : "/u4e8c",      
-    "3" : "/u4e09",      
-    "4" : "/u56db",      
-    "5" : "/u4e94",      
-    "6" : "/u516d"     
-    };      
-    if(/(y+)/.test(fmt)){      
-        fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));      
-    }      
-    if(/(E+)/.test(fmt)){      
-        fmt=fmt.replace(RegExp.$1, ((RegExp.$1.length>1) ? (RegExp.$1.length>2 ? "/u661f/u671f" : "/u5468") : "")+week[date.getDay()+""]);      
-    }      
-    for(var k in o){      
-        if(new RegExp("("+ k +")").test(fmt)){      
-            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));      
-        }      
-    }      
-    return fmt;      
+hui.Control.error = function (str) {
+    if (hui.window && hui.window.console && hui.window.console.error) {
+        hui.window.console.error(str);
+    }
+    else if (typeof (console) !== 'undefined' && console.error) {
+        console.error(str);
+    }
 };
-
-
+hui.Control.log = function (str) {
+    if (hui.window && hui.window.console && hui.window.console.log) {
+        hui.window.console.log(str);
+    }
+    else if (typeof (console) !== 'undefined' && console.log) {
+        console.log(str);
+    }
+};
 hui.Control.getExtClass = function (clazz) {
     var result = function(){};
     switch (clazz) {

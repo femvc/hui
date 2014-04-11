@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>TextInput - A common input control</title>
+<script type="text/javascript" src="../helper/require.js"></script>
+<script type="text/javascript" src="../helper/ext_json.js"></script>
+<script type="text/javascript" src="../helper/hui.js"></script>
+<script type="text/javascript" src="../helper/hui_eventdispatcher.js"></script>
+<script type="text/javascript" src="../helper/hui_basemodel.js"></script>
+<script type="text/javascript" src="../helper/hui_control.js"></script>
+<script type="text/javascript" src="../helper/hui_validator.js"></script>
+<script type="text/javascript" src="../helper/ui_panel.js"></script>
+<script type="text/javascript" src="../helper/ui_textinput.js"></script>
+<script type="text/javascript">
+<!--
+//var haiyang = {controlMap:{}};
+function doit() {
+    var parent = hui.Control.create('Panel',{id: 'parent'}/*,haiyang*/);
+    hui.Control.create('TextInput',{id: 'gg', parentControl: parent});
+    alert('Finish');
+}
+
+//-->
+</script>
+</head>
+
+<body>
+<button type="button" onclick="alert(hui.window.controlMap&&hui.window.controlMap.parent.controlMap.gg?'Success':'Not exist.')">Check</button> 
+
+<script language="vbs">  
+Class C  
+        public property get value  
+        value="ok"  
+        end property  
+
+   Private Sub Class_Terminate     
+      MsgBox("Relese")  
+   End Sub  
+End Class  
+function vbObj()  
+    set vbObj= new C  
+end function   
+</script>
+<script language="javascript" >  
+var a;  
+function f(arg){  
+      this.xx=function(){ alert( arg.value ) }  //如果这里有引用 不会马上会释放  
+     // this.yy=function(){ alert( eval('1+2')  ) }  //有eval 的也不会马上释放  
+     //this.zz=function(){}   //会马上释放  
+}     
+function test(){  
+    var o=vbObj();  
+    a = {};
+    a.a = o;
+     //a=new f(o);  
+}  
+setInterval(CollectGarbage, 500);  
+</script>
+<button type="button" onclick="hui.Control.create(document.getElementById('g')); hui.g('g').value=Math.random()">Create3</button>
+<input type="text" id="g" ui="type:'TextInput',id:'gg'" />
+</body>
+
+</html>

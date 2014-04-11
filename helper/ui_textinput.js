@@ -18,8 +18,8 @@
  */
 define('./hui.TextInput', ['./hui', './hui.Control'], function(){
 
-hui.TextInput = function (options, pending) {
-    hui.TextInput.superClass.call(this, options, 'pending');
+hui.TextInput = function (options, pending) { 
+    hui.TextInput.superClass.call(this, options, 'pending'); 
     
     this.form = 1;
     this.tagName = 'input';
@@ -38,7 +38,7 @@ hui.TextInput.prototype = {
      * @return {String}
      */
     getValue: function() {
-            return this.getMain().value;
+        return this.getMain().value;
     },
 
     /**
@@ -48,10 +48,8 @@ hui.TextInput.prototype = {
      */
     setValue: function(value) {
         value = value === undefined ? '' : value;
-        var oldValue = this.getMain().value;
-        if (oldValue !== value) {
-            this.getChangeHandler()(value);
-        } 
+        this.getChangeHandler()(value);
+        
         this.getMain().value = value;
         if (value) {
             this.getFocusHandler()();
@@ -120,10 +118,10 @@ hui.TextInput.prototype = {
             me.setReadonly(!!me.readonly);
             
             // 绑定事件
-            main.onkeypress = me.getPressHandler();
-            main.onfocus    = me.getFocusHandler();
-            main.onblur     = me.getBlurHandler();
-            main.onchange   = me.getChangeHandler();
+            main.onkeypress = me.getPressHandler;
+            main.onfocus    = me.getFocusHandler;
+            main.onblur     = me.getBlurHandler;
+            main.onchange   = me.getChangeHandler;
         }
                 
         if (me.main && me.value != '') {
@@ -136,14 +134,10 @@ hui.TextInput.prototype = {
      * @private
      * @return {Function}
      */
-    getFocusHandler: function() {
-        var me = this;
-
-        return function() {
-            var main = me.main;
-
-            me.onfocus();
-        };
+    getFocusHandler: function(e) {
+        // this -> control's main element
+        var main = this;
+        hui.Control.getById(main.control).onfocus();
     },
 
     /**
@@ -151,15 +145,10 @@ hui.TextInput.prototype = {
      * @private
      * @return {Function}
      */
-    getBlurHandler: function() {
-        var me = this;
-
-        return function() {
-            var main = me.main,
-                value = me.getValue();
-
-            me.onblur();
-        };
+    getBlurHandler: function(e) {
+        // this -> control's main element
+        var main = this;
+        hui.Control.getById(main.control).onblur();
     },
 
     /**
@@ -167,21 +156,19 @@ hui.TextInput.prototype = {
      * @private
      * @return {Function}
      */
-    getPressHandler: function() {
-        var me = this;
-        return function(e) {
-            e = e || hui.window.event;
-            var keyCode = e.keyCode || e.which;
-            if (keyCode == 13) {
-                return me.onenter();
-            }
-        };
+    getPressHandler: function(e) {
+        var main = this;
+        e = e || hui.window.event;
+        var keyCode = e.keyCode || e.which;
+        if (keyCode == 13) {
+            return hui.Control.getById(main.control).onenter();
+        }
     },
-    getChangeHandler: function () {
-        var me = this;
-        return function(e) {
-            me.onchange(me.getMain().value);
-        };
+    getChangeHandler: function (e) {
+        var main = this;
+        var me = hui.Control.getById(main.control);
+        var value = (e && (e.target || e.srcElement)) ? me.getMain().value : e;
+        me.onchange(value);
     },
     onenter: new Function(),
     onfocus: new Function(),

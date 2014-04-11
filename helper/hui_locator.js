@@ -275,7 +275,7 @@ hui.Locator = {
      */
     ieRoute: function( loc ) {
         var me = this;
-        var iframe = hui.bocument.getElementById(me.CONTROL_IFRAME_ID),
+        var iframe = document.getElementById(me.CONTROL_IFRAME_ID),
             iframeDoc = iframe.contentWindow.document;
 
         iframeDoc.open( 'text/html' );
@@ -294,14 +294,14 @@ hui.Locator = {
             ie = /msie (\d+\.\d+)/i.test(navigator.userAgent) ? (document.documentMode || + RegExp['\x241']) : undefined;
         if (ie && ie < 8){
             me.ieCreateIframeRecorder();
-            hui.window.setInterval( function(){me.changeListener();}, 100 );
+            window.setInterval( function(){me.changeListener();}, 100 );
         } 
-        else if ( 'onhashchange' in hui.window ) {
-            hui.window.onhashchange = function(args){me.changeListener(args);};
+        else if ( 'onhashchange' in window ) {
+            window.onhashchange = function(args){me.changeListener(args);};
             me.changeListener();
         } 
         else {
-            hui.window.setInterval( function(){me.changeListener();}, 100 );
+            window.setInterval( function(){me.changeListener();}, 100 );
         }
     },
     /**

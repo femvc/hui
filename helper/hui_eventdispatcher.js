@@ -32,19 +32,21 @@ hui.EventDispatcher.prototype = {
             this._listeners[eventType] = [];
         }
         var list = this._listeners[eventType],
-            i,
-            len,
-            exist = false;
+            exist = false,
+            index;
         
-        for (i=0,len=list.length; i<len; i++) {
+        for (var i=0,len=list.length; i<len; i++) {
             if (list[i] === listener) {
                 exist = true;
+                index = i;
                 break;
             }
         }
         if (!exist) {
             this._listeners[eventType].push(listener);
+            index = this._listeners[eventType].length - 1;
         }
+        return index;
     },
 
     /**
@@ -57,13 +59,11 @@ hui.EventDispatcher.prototype = {
         if (!this._listeners[eventType]) {
             return;
         }
-        var list = this._listeners[eventType],
-            i,
-            len;
+        var list = this._listeners[eventType];
         
-        for (i=0,len=list.length; i<len; i++) {
-            if (list[i] === listener) {
-                this._listeners[eventType].splice(i, 1);
+        for (var i=0,len=list.length; i<len; i++) {
+            if (list[i] === listener || i === listener) {
+                this._listeners[eventType][i] = undefined;
                 break;
             }
         }
@@ -99,12 +99,14 @@ hui.EventDispatcher.prototype = {
         if (!this._listeners[eventType]) {
             return;
         }
-        var i, args = [];
-        for (i = 1; i < arguments.length; i++) {
+        var args = [];
+        for (var i = 1; i < arguments.length; i++) {
             args.push(arguments[i]);
         }
-        for (var i = 0; i < this._listeners[eventType].length; i++) {
-            this._listeners[eventType][i].apply(this, args);
+        for (var i=0,len=this._listeners[eventType].length; i<len; i++) {
+            if (this._listeners[eventType][i]) {
+                this._listeners[eventType][i].apply(this, args);
+            }
         }
     }
 };

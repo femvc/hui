@@ -1,9 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>TextInput - A common input control</title>
+<script language="vbs">  
+Class C  
+        public property get value  
+        value="ok"  
+        end property  
+
+   Private Sub Class_Terminate     
+      MsgBox("Relese")  
+   End Sub  
+End Class  
+function vbObj()  
+    set vbObj= new C  
+end function   
+</script>
+<script language="javascript" >  
+setInterval(CollectGarbage, 500);  
+</script>  
+
 <script type="text/javascript" src="../helper/require.js"></script>
 <script type="text/javascript" src="../helper/ext_json.js"></script>
 <script type="text/javascript" src="../helper/hui.js"></script>
@@ -19,30 +37,30 @@
 function doit() {
     var parent = hui.Control.create('Panel',{id: 'parent'}/*,haiyang*/);
     hui.Control.create('TextInput',{id: 'gg', parentControl: parent});
-    alert('Finish');
+    hui.Control.log('Finished');
 }
 
 //-->
 </script>
 </head>
 
-<body>
-<button type="button" onclick="alert(hui.window.controlMap&&hui.window.controlMap.parent.controlMap.gg?'Success':'Not exist.')">Check</button> 
-
+<body>www
 <button type="button" onclick="doit()">Create</button>
-<!--
 <script type="text/javascript">
-function doit() {
+function doit2() {
     hui.Control.init(document.getElementById('aa'),{}/*,haiyang*/);
-    alert('Finish');
+    hui.Control.log('Finished');
 }
 </script>
+<button type="button" onclick="doit2()">Create2</button>
+<button type="button" onclick="hui.Control.create(document.getElementById('g'));hui.Control.log('Finished');">Create3</button>
+
 <div id="aa">
     <div ui="type:'Panel',id:'parent'">
-        <input type="text" ui="type:'TextInput',id:'gg'" />
+        <input type="text" id="g" ui="type:'TextInput',id:'gg'" />
         <button type="button" onclick="alert(hui.window.controlMap&&hui.window.controlMap.parent.controlMap.gg?'Success':'Not exist.')">Get Control</button>
 </div>
-</div-->
+</div>
 </body>
 
 </html>

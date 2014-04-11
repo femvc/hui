@@ -612,7 +612,7 @@ hui.parseDate = function(str){
     if(results && results.length>6)   
       return new Date(parseInt(results[1]),parseInt(results[2]) -1,parseInt(results[3]),parseInt(results[4]),parseInt(results[5]),parseInt(results[6]));    
      
-    return null;   
+    return (new Date(str));   
 }; 
     
 

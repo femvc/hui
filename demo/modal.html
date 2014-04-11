@@ -25,9 +25,6 @@ function doit() {
     // hui.Template.parseTemplate('<!-- target:modalFoot -->foot ${name} ');
     
     
-    // hui.Control.init(hui.bocument.getElementById('aa'));
-    
-    //hui.Control.init(hui.bocument.getElementById('aa'),{},haiyang);
     var nc = hui.Control.create('Modal', {id:'ff',title:'This is dialog.', size: {width: '600px',height: '300px'}});
     nc.setBodyContentHtml('This is body.');
     hui.window.controlMap['ff'] = nc;
