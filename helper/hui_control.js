@@ -17,7 +17,7 @@
  */
 define('./hui.Control', ['./JSON', './hui', './hui.EventDispatcher'], function(){
 
-hui.Control = function (options, pending) {this.vb = vbObj();
+hui.Control = function (options, pending) {
     hui.EventDispatcher.call(this);
     
     // 状态列表
