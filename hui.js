@@ -1,157 +1,5 @@
 'use strict';
-//    ____     ____                _   _     ____          ____      ____                   
-//  /\  __\  /\  __\    /'\_/`\  /\ \/\ \  /\  __`\      /\  __`\  /\  __`\    /'\_/`\      
-//  \ \ \_/_ \ \ \_/_  /\      \ \ \ \ \ \ \ \ \ \_\     \ \ \ \_\ \ \ \ \ \  /\      \     
-//   \ \  __\ \ \  __\ \ \ \_/\_\ \ \ \ \ \ \ \ \  __     \ \ \  __ \ \ \ \ \ \ \ \_/\_\    
-//    \ \ \_/  \ \ \_/_ \ \ \\ \ \ \ \ \_/ \ \ \ \_\ \  __ \ \ \_\ \ \ \ \_\ \ \ \ \\ \ \   
-//     \ \_\    \ \____/ \ \_\\ \_\ \ `\___/  \ \____/ /\_\ \ \____/  \ \_____\ \ \_\\ \_\  
-//      \/_/     \/___/   \/_/ \/_/  `\/__/    \/___/  \/_/  \/___/    \/_____/  \/_/ \/_/  
-//                                                                                          
-//                                                                                          
-
-/**
- * @name HUI是一个富客户端应用的前端MVC框架
- * @public
- * @author wanghaiyang
- * @date 2013/08/08
- */
-define('./hui', [], function(){
-
-// 使用window.hui定义可能会导致速度下降约7倍
 var hui = {};
-
-hui.env = typeof (window) === 'undefined' ? 'nodejs' : 'browser';
-hui.lang = {};
-hui.mainId = 'main'; //默认main，也可以在后面修改
-
-hui.g = function(id, parentNode) {
-    if (!parentNode || parentNode == hui.bocument || parentNode == hui.bocument.body) {
-        return hui.dom ? hui.dom.getElementById(id) : document.getElementById(id);
-    }
-    else {
-        var i, len, k, v,
-            childNode,
-            elements,
-            list,
-            childlist,
-            node;
-        elements=[],list=[parentNode];
-        
-        while(list.length){
-            childNode= list.pop();
-            if(!childNode) continue;
-            if (childNode.id == id) {
-                break;
-            }
-            elements.push(childNode);
-            childlist = childNode.childNodes;
-            if(!childlist||childlist.length<1) continue;
-            for(i=0,len=childlist.length;i<len;i++){
-                node = childlist[i];
-                list.push(node);
-            }
-        }
-        return (childNode.id == id ? childNode : null);
-    }
-};
-
-hui.c = function(searchClass, node, tag) {  
-    if (document.getElementsByClassName) {  
-        var nodes =  (node || document).getElementsByClassName(searchClass),result = nodes; 
-        if (tag != undefined) { 
-            result = []; 
-            for (var i=0,len=nodes.length; i<len; i++) {
-                if (tag === '*' || nodes[i].tagName.toUpperCase() === tag.toUpperCase()){ 
-                    result.push(nodes[i]);
-                }
-            } 
-        } 
-        return result; 
-    }
-    else {  
-        searchClass = searchClass != null ? String(searchClass).replace(/\s+/g, ' ') : '';
-        node = node || document;  
-        tag = tag || '*';  
-        
-        var classes = searchClass.split(' '),  
-            elements = (tag === '*' && node.all) ? node.all : node.getElementsByTagName(tag),  
-            patterns = [],  
-            returnElements = [],  
-            current,  
-            match;  
-        
-        var i = classes.length;  
-        while (--i >= 0) {  
-            patterns.push(new RegExp('(^|\\s)' + classes[i] + '(\\s|$)'));  
-        }  
-        var j = elements.length;  
-        while (--j >= 0) {  
-            current = elements[j];  
-            match = false;  
-            for (var k=0,kl=patterns.length; k<kl; k++){  
-                match = patterns[k].test(current.className);  
-                if (!match) { break;  } 
-            }  
-            if (match){ returnElements.push(current);}   
-        }  
-        return returnElements;  
-    }  
-};
-/**
- * @name 将innerHTML生成的元素append到elem后面
- * @public
- * @param {HTMLElement} elem 父元素
- * @param {String} html 子元素HTML字符串
- */
-hui.appendHtml = function (elem, html) {
-    var node = document.createElement('DIV');
-    node.innerHTML = html;
-    elem.appendChild(node);
-    for (var i=0,len=node.childNodes.length; i<len; i++) {
-        elem.appendChild(node.childNodes[i]);
-    }
-    elem.removeChild(node);
-};
-
-hui.addClass = function (element, className) {
-    if (~'[object Array][object NodeList]'.indexOf(Object.prototype.toString.call(element))) {
-        for (var i=0,len=element.length; i<len; i++) {
-            hui.addClass(element[i], className);
-        }
-    }
-    else if (element) {      
-        hui.removeClass(element, className);
-        element.className = (element.className +' '+ className).replace(/(\s)+/ig,' ');
-    }
-    return element;
-};
-// Support * and ?, like hui.removeClass(elem, 'daneden-*');
-hui.removeClass = function(element, className) {
-    if (~'[object Array][object NodeList]'.indexOf(Object.prototype.toString.call(element))) {
-        for (var i=0,len=element.length; i<len; i++) {
-            hui.removeClass(element[i], className);
-        }
-    }
-    else if (element) {
-        var list = className.replace(/\s+/ig, ' ').split(' '),
-            /* Attention: str need two spaces!! */
-            str = (' ' + (element.className || '').replace(/(\s)/ig, '  ') + ' '),
-            name,
-            rex;
-        // 用list[i]移除str
-        for (var i=0,len=list.length; i < len; i++){
-            name = list[i];
-            name = name.replace(/(\*)/g,'\\S*').replace(/(\?)/g,'\\S?');
-            rex = new RegExp(' '+name + ' ', 'ig');
-            str = str.replace(rex, ' ');
-        }
-        str = str.replace(/(\s)+/ig,' ');
-        str = str.replace(/^(\s)+/ig,'').replace(/(\s)+$/ig,'');
-        element.className = str;
-    }
-    return element;
-};
-
 /** 
  * @name 对目标字符串进行格式化
  * @public
@@ -207,44 +55,6 @@ hui.sortBy = function(list, field, order) {
         })
     } 
     return list; 
-};
-
-/** 
- * @name 事件绑定与解绑 
- */ 
-hui.on = function(elem, eventName, handler) { 
-    if (elem.addEventListener) { 
-        elem.addEventListener(eventName, handler, false); 
-    } 
-    else if (elem.attachEvent) { 
-        elem.attachEvent('on' + eventName, function(){handler.call(elem)}); 
-       //此处使用回调函数call()，让 this指向elem 
-    } 
-};
-hui.off = function(elem, eventName, handler) { 
-    if (elem.removeEventListener) { 
-         elem.removeEventListener(eventName, handler, false); 
-    } 
-    if (elem.detachEvent) { 
-        elem.detachEvent('on' + eventName, handler); 
-    } 
-};
-
-/** 
- * @name 给elem绑定onenter事件
- * @public
- * @param {HTMLElement} elem 目标元素
- * @param {Function} fn 事件处理函数
- */
-hui.onenter = function(elem, fn) {
-    hui.on(elem, 'keypress', function(e) {
-        e = e || hui.window.event;
-        var keyCode = e.keyCode || e.which;
-        if (keyCode == 13) {
-            elem.onenter&&elem.onenter();
-            fn(elem);
-        }
-    });
 };
 
 /** 
@@ -329,22 +139,6 @@ hui.derive = function(obj, clazz){
     for(var i in me){
         if(obj[i] == undefined) obj[i] = me[i];
     }
-};
-
-/** 
- * @name 根据字符串查找对象
- * @param {String} name 对象对应的字符串
- * @param {Object} opt_obj 父对象
- * @public
- */
-hui.getObjectByName = function(name, opt_obj) {
-    var parts = name.split('.'),
-        part,
-        cur = opt_obj || hui.window;
-    while (cur&&(part=parts.shift())) {
-        cur = cur[part];
-    }
-    return cur;
 };
 
 /** 
@@ -509,27 +303,6 @@ hui.isEqual = function(a, b, aStack, bStack) {
     return result;
 };
 
-hui.getCookie = function(name) {  
-    var start = document.cookie.indexOf(name + "=");  
-    var len = start + name.length + 1;  
-    if ((!start) && (name != document.cookie.substring(0, name.length))) {  
-        return undefined;  
-    }  
-    if (start == -1) return undefined;  
-    var end = document.cookie.indexOf(';', len);  
-    if (end == -1) end = document.cookie.length;  
-    return unescape(document.cookie.substring(len, end));  
-};
-hui.setCookie = function(name, value, expires, path, domain, secure) {  
-    expires = expires || 24*60*60*1000;
-    var expires_date = new Date((new Date()).getTime() + (expires));  
-    document.cookie = name + '=' + escape(value) + ((expires) ? ';expires=' + expires_date.toGMTString() : '') + /*expires.toGMTString()*/   
-    ((path) ? ';path=' + path: '') + ((domain) ? ';domain=' + domain: '') + ((secure) ? ';secure': '');  
-};
-hui.removeCookie = function(name, path, domain) {  
-    if (hui.getCookie(name)) document.cookie = name + '=' + ((path) ? ';path=' + path: '') + ((domain) ? ';domain=' + domain: '') + ';expires=Thu, 01-Jan-1970 00:00:01 GMT';  
-};
-
 hui.formatDate = function(date,fmt) {      
     if(!date) date = new Date(); 
     fmt = fmt||'yyyy-MM-dd HH:mm'; 
@@ -614,10 +387,17 @@ hui.parseDate = function(str){
      
     return (new Date(str));   
 }; 
-    
 
-// !!! global.hui = ...
-if (typeof window != 'undefined') {window.hui = hui;hui.window = window;/*hui.bocument = document;//注：hui.bocument与document不相同! hui.dom等于hui.bocument或document!*/}
-if (typeof global != 'undefined') {global.hui = hui;hui.window = global;}
 
-});
+exports.format     = hui.format;
+exports.sortBy     = hui.sortBy;
+exports.fn         = hui.fn;
+exports.inherits   = hui.inherits;
+exports.extend     = hui.extend;
+exports.derive     = hui.derive;
+exports.clone      = hui.clone;
+exports.isEqual    = hui.isEqual;
+exports.formatDate = hui.formatDate;
+exports.parseDate  = hui.parseDate;
+
+

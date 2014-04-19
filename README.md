@@ -1,4 +1,3 @@
-hui
-===
+##HUI
 
-A base front-end framework
+Hujiang front-end library

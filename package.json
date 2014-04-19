@@ -1,0 +1,27 @@
+{
+  "name": "hui",
+  "version": "0.0.6",
+  "description": "Hujiang front-end library",
+  "main": "hui.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/femvc/hui.git"
+  },
+  "keywords": [
+    "fe",
+    "mvc",
+    "hujiang",
+    "hui"
+  ],
+  "author": "haiyang5210",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/femvc/hui/issues"
+  },
+  "homepage": "https://github.com/femvc/hui",
+  "readme": "HUI\n===============\n\nHujiang front-end library",
+  "readmeFilename": "README.md"
+}
