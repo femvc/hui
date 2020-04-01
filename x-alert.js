@@ -32,16 +32,15 @@ hui.createClass('x-alert', {
     hui.Control.prototype.render.call(this, opt_propMap)
     var me = this
     // 渲染对话框
-    // hui.Control.initChildControl(me.getMain(), {}, opt_propMap)
+    // hui.Control.initChildControl(me, {}, opt_propMap)
     this.childrenChangedCallback()
   },
   isformitem: false,
   childrenChangedCallback: function () {
     // console.log('invoked childrenChangedCallback!')
     var me = this
-    var main = me.getMain()
-    var raw = main.innerHTML
-    main.innerHTML = [
+    var raw = me.innerHTML
+    me.innerHTML = [
       '<div class="alert alert-warning alert-dismissible fade in">',
       '  <button type="button" class="close" aria-label="Close">',
       '    <span aria-hidden="true">&times;</span>',
@@ -50,20 +49,17 @@ hui.createClass('x-alert', {
       '</div>'
     ].join('\n')
 
-    main.querySelector('button.close').onclick = function () { me.close() }
+    me.querySelector('button.close').onclick = function () { me.close() }
     me.close()
   },
   setContent: function (str) {
-    var main = this.getMain()
-    main.querySelector('.content').innerHTML = str
+    this.querySelector('.content').innerHTML = str
   },
   close: function () {
-    var main = this.getMain()
-    main.style.display = 'none'
+    this.style.display = 'none'
   },
   show: function () {
-    var main = this.getMain()
-    main.style.display = 'block'
+    this.style.display = 'block'
   }
 })
 

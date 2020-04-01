@@ -1,3 +1,4 @@
+/* global hui,console,await */
 'use strict'
 //   ____             ___          __              ___              
 //  /\  __`\     __  /\_ \    __  /\ \        __  /\_ \    __       
@@ -14,130 +15,6 @@
  * @class hui.Flow
  * @description Javascript简单异步框架。注：异步队列中的函数需要实现callback的接口
  */
-hui.Flow = function() {
-  if (!(this instanceof hui.Flow)) return new hui.Flow()
-  var me = this
-  /**
-   * @property {Array} que 保存回调队列
-   * @memerberof hui.Flow
-   */
-  me.que = [hui.fn(me.endFlow, me)]; // 注：存放要调用的函数列表
-  me.id = hui.Flow.getIndex(); // 注：仅用于标示，不会被调用（即使删掉也没什么影响）
-  me.parentflow = []
-  /**  
-   * @method hui.Flow.next
-   * @description 开始执行异步队列
-   * @public
-   * @memerberof hui.Flow
-   * @param {Function} callback 嵌套时的回调函数，其实就是hui.Flow.prototype.next
-   */
-  me.next = function() {
-    var args = [].slice.call(arguments, 0)
-
-    // console.log(me.id)
-    if (me.que.length > 0) {
-      var fn = me.que.shift()
-      fn.apply(null, args)
-    }
-  }
-  me.next._isFlowPrivate = hui.Flow.getGUID()
-  me.next.mainFlow = me
-
-}
-hui.Flow.getGUID = (function() {
-  var guid = new Date().toString() + Math.random()
-  return function() {
-    return guid
-  }
-})();
-hui.Flow.getIndex = (function() {
-  var guid = 1
-  return function() {
-    return guid++
-  }
-})();
-/**  
- * @method hui.Flow.push
- * @description 添加需要异步执行的函数
- * @public
- * @memerberof hui.Flow
- * @param {Function} fn 需要异步执行的函数
- * @return {this} 返回主体以便于后续操作
- * @example
- * function doit() {
- *     alert('a')
- *     
- *     var que1 = new hui.Flow()
- *     que1.push(a)
- *     que1.push(d); 
- *     setTimeout(function(){
- *         que1.next()
- *     },400)
- * }
- *  
- * function a(callback) {
- *     alert('a')
- *     
- *     var que2 = new hui.Flow()
- *     que2.push(b).push(c).push(callback); 
- *     
- *     setTimeout(function(){
- *         que2.next()
- *     },400)
- * }
- * function b(callback) {
- *     alert('b')
- *     callback&&callback()
- * }
- * function c(callback) {
- *     alert('c')
- *     callback&&callback()
- * }
- */
-hui.Flow.prototype.push = function(fn) {
-  var me = this,
-    endFlow
-
-  if (fn && fn._isFlowPrivate === hui.Flow.getGUID()) {
-    endFlow = me.que.pop()
-    me.que.push(fn)
-    me.que.push(endFlow)
-    if (fn.mainFlow) {
-      fn.mainFlow.parentflow.push(me)
-    }
-  } else {
-    var callback = hui.fn(me.next, me)
-    callback._isFlowPrivate = hui.Flow.getGUID()
-
-    endFlow = me.que.pop()
-    me.que.push(function() {
-      fn.apply(me, [callback].concat([].slice.call(arguments, 0)))
-    })
-    me.que.push(endFlow)
-  }
-
-  return me
-}
-hui.Flow.prototype.endFlow = function() {
-  var me = this
-  if (me.parentflow) {
-    while (me.parentflow.length) {
-      me.parentflow.pop().next()
-    }
-  }
-}
-
-hui.isES6 = function() {
-  return false
-  var es6 = true
-  try {
-    eval('typeof(class {})')
-  } catch (e) {
-    es6 = false
-  }
-  return es6
-}
-
 /***
  * @class hui.Control
  * @description 基础控件类
@@ -155,6 +32,7 @@ hui.Control = function(options, pending, opt_propMap) {
     this.id = hui.makeGUID(this.formname)
   }
   hui.Control.appendControl(options.parentControl, this)
+  
   // 子类调用此构造函数不可以立即执行!!只能放在子类的构造函数中执行!否则实例化时找不到子类中定义的属性!
   // 进入控件处理主流程!
   if (pending != 'pending') {
@@ -173,7 +51,7 @@ hui.Control.prototype = {
    * @memerberof hui.Control.prototype
    * @param {Object} options 参数集合
    */
-  initOptions: function(options) {
+  initOptions (options) {
     for (var k in options) {
       if (options.hasOwnProperty(k)) {
         this[k] = options[k]
@@ -189,7 +67,7 @@ hui.Control.prototype = {
    * @protected
    * @return {String}
    */
-  getClass: function(opt_key) {
+  getClass (opt_key) {
     if (!this.type) {
       return ''
     }
@@ -212,28 +90,17 @@ hui.Control.prototype = {
   },
 
   /**
-   * @method getMain
-   * @description 获取控件的elem(nodejs). 注:控件即使不需要显示任何内容也必须有一个挂载的elem(可以是隐藏的),
-   * @memerberof hui.Control.prototype
-   * 通过模板解析控件时会用到 [nodejs&browser]
-   * @public
-   * @return {String}
-   */
-  getMain: function() {
-    return hui.isES6() ? this : this.main ? document.getElementById(this.main) : null
-  },
-  /**
    * @method render
    * @description 渲染控件
    * @memerberof hui.Control.prototype
    * @public
    */
-  render: function(opt_propMap) {
+  render (opt_propMap) {
+    console.log(opt_propMap)
     // var me = this;
-    // var main = me.getMain();
     // var data = me.model && me.model.getData && typeof me.model.getData === 'function' ? me.model.getData() : {};
-    // hui.Control.create(main, data, me);
-    // main.setAttribute('_rendered', 'true');
+    // hui.Control.createNode(me, data, me);
+    // me.setAttribute('_rendered', 'true');
   },
   // 
   /**
@@ -241,7 +108,7 @@ hui.Control.prototype = {
    * @memerberof hui.Control.prototype
    * @public
    */
-  // initView: function (callback) {
+  // initView (callback) {
   //     callback && callback()
   // },
   /**
@@ -250,51 +117,50 @@ hui.Control.prototype = {
    * @memerberof hui.Control.prototype
    * @public
    */
-  initBehavior: function() {
+  initBehavior () {
     //var me = this
   },
-  initBehaviorByTree: function() {
-    var me = this,
-      main = me.getMain()
+  initBehaviorByTree () {
+    var me = this
     if (me.cc) {
       for (var i = 0, len = me.cc.length; i < len; i++) {
         me.cc[i].initBehaviorByTree()
       }
     }
-    if (main && main.getAttribute('_initbehavior') != 'true') {
-      main.setAttribute('_initbehavior', 'true')
+    if (me.getAttribute('_initbehavior') != 'true') {
+      me.setAttribute('_initbehavior', 'true')
       me.initBehavior()
     }
   },
   // 返回控件的值
   //getValue:   function(){}, // 注: 控件直接返回值(对象/数组/字符串)时才能使用getValue! 获取所有子控件的值,应该用getParamMap
-  setValue: function(paramMap) {
+  setValue (paramMap) {
     var me = this
     if (me.cc && (/\[object Object\]/.test(Object.prototype.toString.call(paramMap)))) {
       me.setValueByTree(paramMap)
     } else {
-      // 注：在setValue/getValue时不允许使用hui.Control.getMain(me).setAttirbute('value', value)和
-      // hui.Control.getMain(me).getAttirbute('value'),因为value有可能是数组/对象！！
+      // 注：在setValue/getValue时不允许使用me.setAttirbute('value', value)和
+      // me.getAttirbute('value'),因为value有可能是数组/对象！！
       // 如果确定value是num或str可以在子类中覆盖setValue/getValue！！
-      var main = hui.Control.getMain(me)
-      if (String(main.tagName).toLowerCase() === 'input' &&
-        (String(main.type).toLowerCase() === 'checkbox' || String(main.type).toLowerCase() === 'radio')) {
-        if (main.value === String(paramMap)) {
-          main.checked = 'checked'
-        } else main.checked = false
+      var tagName = String(me.tagName).toLowerCase()
+      var tagType = String(me.type).toLowerCase()
+      if (tagName === 'input' && (tagType === 'checkbox' || tagType === 'radio')) {
+        if (me.value === String(paramMap)) {
+          me.checked = 'checked'
+        } else me.checked = false
       } else {
-        main.value = paramMap
+        me.value = paramMap
       }
     }
     return me
   },
   /**
    * @method setValueByTree
-   * @description 给控件树一次性赋值
+   * @description 给控件树整体赋值
    * @memerberof hui.Control.prototype
    * @param {Object} paramMap 值
    */
-  setValueByTree: function(paramMap) {
+  setValueByTree (paramMap) {
     var me = this,
       value,
       list,
@@ -309,12 +175,12 @@ hui.Control.prototype = {
             value = paramMap[formname]
           } else {
             value = []
-            for (var i = list.length; i > 0; i--) {
+            for (let i = list.length; i > 0; i--) {
               value.push(paramMap[formname])
             }
           }
 
-          for (var i = 0, len = list.length; i < len; i++) {
+          for (let i = 0, len = list.length; i < len; i++) {
             ctr = list[i]
 
             if (ctr.cc) {
@@ -322,14 +188,14 @@ hui.Control.prototype = {
             } else if (ctr.setValue) {
               ctr.setValue(value[i])
             } else {
-              var main = hui.Control.getMain(ctr)
-              if (String(main.tagName).toLowerCase() === 'input' &&
-                (String(main.type).toLowerCase() === 'checkbox' || String(main.type).toLowerCase() === 'radio')) {
-                if (main.value === String(value[i])) {
-                  main.checked = 'checked'
-                } else main.checked = false
+              var tagName = String(ctr.tagName).toLowerCase()
+              var tagType = String(ctr.type).toLowerCase()
+              if (tagName === 'input' && (tagType === 'checkbox' || tagType === 'radio')) {
+                if (ctr.value === String(value[i])) {
+                  ctr.checked = 'checked'
+                } else ctr.checked = false
               } else {
-                main.value = value[i]
+                ctr.value = value[i]
               }
             }
 
@@ -345,10 +211,10 @@ hui.Control.prototype = {
    * @memerberof hui.Control.prototype
    * @public
    */
-  getParamMap: function() {
+  getParamMap () {
     return this.getValueByTree()
   },
-  getValueByTree: function() {
+  getValueByTree () {
     var me = this,
       paramMap = {},
       ctr,
@@ -358,46 +224,44 @@ hui.Control.prototype = {
 
     // 如果有子控件建议递归调用子控件的getValue!!
     if (me.cc) {
-      for (var i = 0, len = me.cc.length; i < len; i++) {
+      for (let i = 0, len = me.cc.length; i < len; i++) {
         ctr = me.cc[i]
         formname = hui.Control.prototype.getFormname.call(ctr)
         if (formname) groupList[formname] = !!ctr.group
 
         if (hui.Control.isFormItem(ctr)) {
           paramMap[formname] = paramMap[formname] ? paramMap[formname] : []
+          let tagName = String(ctr.tagName).toLowerCase()
           if (ctr.cc) {
             value = ctr.getParamMap()
+            paramMap[formname].push(value)
+          }
+          else if (tagName == 'input' && (!ctr.type || ctr.type == 'text')) {
+            value = ctr.value
+            paramMap[formname].push(value)
+          } else if (tagName == 'input' && (ctr.type == 'checkbox' || ctr.type == 'radio')) {
+            value = ctr.checked ? (ctr.value || ctr.getAttribute('value')) : ''
             paramMap[formname].push(value)
           }
           // 对于input元素而言value是property而不是atrribute，因此
           // input.getAttribute('value') 默认为空不会因为input.value=123而改变， div.value默认undefined
           else if (ctr.getValue !== undefined) {
-            var main = hui.Control.getMain(ctr)
-            var tagName = String(main.tagName).toLowerCase()
-            if (tagName == 'input' && (main.type == 'checkbox' || main.type == 'radio')) {
-              value = main.checked ? ctr.getValue() : ''
-            } else {
-              value = ctr.getValue()
-            }
+            value = ctr.getValue()
             paramMap[formname].push(value)
           }
           // input.getAttribute('value') 默认为空不会因为input.value=123而改变， div.value默认undefined
-          else if (ctr.getMain) {
-            var main = ctr.getMain()
-            if (main && main.value !== undefined) {
-              var tagName = String(main.tagName).toLowerCase()
-              if (tagName == 'input' && (main.type == 'checkbox' || main.type == 'radio')) {
-                value = main.checked ? main.value : ''
-              } else {
-                value = main.value
-              }
-              paramMap[formname].push(value)
+          else {
+            if (ctr.value !== undefined) {
+              value = ctr.value
+            } else if (ctr.getAttribute('value') !== undefined) {
+              value = ctr.getAttribute('value')
             }
+            paramMap[formname].push(value)
           }
         }
       }
       // 注：默认都用数组包装，此处还原为值
-      for (var j in paramMap) {
+      for (let j in paramMap) {
         if (paramMap[j] && paramMap[j].length < 2) {
           paramMap[j] = paramMap[j][0] !== undefined ? (groupList[j] ? paramMap[j] : paramMap[j][0]) : ''
         }
@@ -417,11 +281,11 @@ hui.Control.prototype = {
    * <button hui-type="Button" hui-formname="save">Save</button>
    * var save = hui.Control.getByFormname('save')
    */
-  getByFormname: function(formname) {
+  getByFormname (formname) {
     var me = this
     return hui.Control.getByFormname(formname, me)
   },
-  getByFormnameAll: function(formname, all) {
+  getByFormnameAll (formname, all) {
     var me = this
     return hui.Control.getByFormnameAll(formname, me, all)
   },
@@ -432,10 +296,9 @@ hui.Control.prototype = {
    * @public
    * @param {Object} control
    */
-  getFormname: function() {
-    var me = this,
-      main = hui.Control.getMain(me)
-    var itemName = me.formname || me.name || (main.getAttribute ? (main.getAttribute('formname') || main.getAttribute('name')) : '')
+  getFormname () {
+    var me = this
+    var itemName = me.formname || me.name || me.getAttribute('formname') || ''
     return itemName
   },
   // 
@@ -446,7 +309,7 @@ hui.Control.prototype = {
   //  * @return {String} target名字
   //  * @default 默认为action的id
   //  */
-  // getView: function () {
+  // getView () {
   //     var view = (this.view === null ? '' : this.view)
   //     // 获取view
   //     if (typeof view === 'function') {
@@ -463,186 +326,66 @@ hui.Control.prototype = {
    * @protected
    * @param {Object} argMap arg表.
    */
-  enterControl: function(opt_propMap, callback) {
-    var uiObj = this
+  enterControl (opt_propMap) {
+    var me = this
     // 注：默认增加一个空元素作为控件主元素!
-    if (typeof uiObj.getMain !== 'function') {
-      uiObj.getMain = hui.Control.prototype.getMain
-    }
-    var elem = uiObj.getMain() || (uiObj.createMain ? uiObj.createMain() : hui.Control.prototype.createMain.call(uiObj))
-    if (!elem) {
-      return console.error('Control\'s main element is invalid')
-    } else {
-      elem.setAttribute('_rendered', '')
-      elem.setAttribute('_initbehavior', '')
-    }
-
-    var que = new hui.Flow(); // 注：可以参照hui_flow.js文件。非常简单，不到30行代码
-    if (!hui.Control.parseCtrId(elem)) {
-      que.push(function(next) {
-        var me = uiObj
-        var main = me.getMain()
-        // 默认设置value
-        if (uiObj.value !== undefined) {
-          main.value = uiObj.value
-        }
-        // 便于通过hui.Control.parseCtrId(main)找到control
-        var ctrid = hui.Control.parseCtrId(main)
-        if (!ctrid) {
-          ctrid = hui.makeGUID('')
-          main.className = (main.className + ' hui_ctrid' + ctrid).replace(/^(\s+|\s+$)/g, '')
-        }
-        if (me.getClass) hui.addClass(main, me.getClass())
-        if (me.setSize) me.setSize()
-
-        if (next) next()
-      })
+    me.setAttribute('_rendered', '')
+    me.setAttribute('_initbehavior', '')
+      
+    if (!hui.Control.parseCtrId(me)) {
+      // 便于通过hui.Control.parseCtrId(me)找到control
+      var ctrid = hui.Control.parseCtrId(me)
+      if (!ctrid) {
+        ctrid = hui.makeGUID('')
+        me.className = (me.className + ' hui_ctrid' + ctrid).replace(/^(\s+|\s+$)/g, '')
+      }
+      if (me.getClass) hui.addClass(me, me.getClass())
+      if (me.setSize) me.setSize()
     }
 
     // 初始化Model
-    if (elem.getAttribute && elem.getAttribute('_initModel') != 'true') {
-      if (uiObj.initModel && uiObj.initModelMethod !== 'async' && uiObj.initModelMethod !== 'skip') {
-        que.push(function(next) {
-          var me = uiObj
-          me.initModel()
-
-          if (next) next()
-        })
-        que.push(function(next) {
-          var me = uiObj
-          var main = me.getMain()
-          main.getAttribute('_initModel', 'true')
-          if (next) next()
-        })
-      } else if (uiObj.initModelAsync && uiObj.initModelMethod !== 'sync' && uiObj.initModelMethod !== 'skip') {
-        que.push(function(next) {
-          uiObj.initModelAsync(next)
-        })
-        que.push(function(next) {
-          var me = uiObj
-          var main = me.getMain()
-          main.getAttribute('_initModel', 'true')
-          if (next) next()
-        })
+    if (me.getAttribute && me.getAttribute('_initModel') != 'true') {
+      if (me.initModel) {
+        await(me.initModel())
+        me.getAttribute('_initModel', 'true')
       }
     }
 
     // 渲染视图
-    if (elem.getAttribute && elem.getAttribute('_initView') != 'true') {
-      if (uiObj.initView && uiObj.initViewMethod !== 'async' && uiObj.initViewMethod !== 'skip') {
-        que.push(function(next) {
-          var me = uiObj
-          me.initView()
+    if (me.getAttribute && me.getAttribute('_initView') != 'true') {
+      if (me.initView) {
+        await(me.initView())
+        me.getAttribute('_initView', 'true')
+      }
+    }
 
-          if (next) next()
-        })
+    me.parseParentControl()
+    
+    // 1. initView()会在render调用父类的render时自动调用，
+    // 2. hui.Control.createNode()会通过enterControl来执行render
+    // 3. initBehavior()会在后面执行
+    if (me.getAttribute && me.getAttribute('_rendered') != 'true') {
+      me.setAttribute('_rendered', 'true')
+      // 注：原本isES6和!isES6的逻辑不应该互相调用
+      // 这里由于用户默认采用isES6的格式传入方法参数，因此这里才会调用childrenChangedCallback
+      if (me.childrenChangedCallback) {
+        me.childrenChangedCallback()
+      } else {
+        if (me.render) me.render(opt_propMap)
+      }
+    }
 
-        que.push(function(next) {
-          var me = uiObj
-          var main = me.getMain()
-          main.getAttribute('_initView', 'true')
-
-          if (next) next()
-        })
-
-      } else if (uiObj.initViewAsync && uiObj.initViewMethod !== 'sync' && uiObj.initViewMethod !== 'skip') {
-        que.push(function(next) {
-          uiObj.initViewAsync(next)
-        })
-
-        que.push(function(next) {
-          var me = uiObj
-          var main = me.getMain()
-          main.getAttribute('_initView', 'true')
-
-          if (next) next()
-        })
+    if (me.getAttribute && me.getAttribute('_initbehavior') != 'true') {
+      if (me.initBehaviorByTree) {
+        me.initBehaviorByTree()
+      } else if (me.initBehavior) {
+        me.initBehavior()
       }
 
-
     }
-
-    que.push(function(next) {
-      var me = uiObj
-      me.parseParentControl()
-      if (next) next()
-    })
-
-    // 1. initView()会在render调用父类的render时自动调用，
-    // 2. hui.Control.create()会通过enterControl来执行render
-    // 3. initBehavior()会在后面执行
-    if (elem.getAttribute && elem.getAttribute('_rendered') != 'true') {
-      que.push(function(next) {
-        var me = uiObj
-        var main = me.getMain()
-
-        main.setAttribute('_rendered', 'true')
-        // 注：原本isES6和!isES6的逻辑不应该互相调用
-        // 这里由于用户默认采用isES6的格式传入方法参数，因此这里才会调用childrenChangedCallback
-        if (me.childrenChangedCallback) {
-          me.childrenChangedCallback()
-        } else {
-          if (me.render) me.render(opt_propMap)
-        }
-
-        if (next) next()
-      })
-    }
-    if (elem.getAttribute && elem.getAttribute('_initbehavior') != 'true') {
-      que.push(function(next) {
-        var me = uiObj
-        if (me.initBehaviorByTree) {
-          me.initBehaviorByTree()
-        } else if (me.initBehavior) {
-          me.initBehavior()
-        }
-
-        if (next) next()
-      })
-    }
-    que.push(function() {
-      var me = uiObj
-      if (me.finish) me.finish()
-
-      if (callback) callback()
-    })
-
-    que.next()
+    if (me.finish) me.finish()
   },
 
-  /**
-   * @method createMain
-   * @description 生成主DOM
-   * @memerberof hui.Control.prototype
-   * @protected
-   */
-  createMain: function() {
-    var me = this,
-      tagName = this.tagName || 'DIV',
-      main = document.createElement(String(tagName).toUpperCase()),
-      control = me.parentControl,
-      wrap = null
-
-    if (!wrap && control && control.getMain) {
-      wrap = control.getMain()
-    }
-    if (!wrap && control && control.main) {
-      wrap = document.getElementById(control.main)
-    }
-    if (!wrap) {
-      wrap = document.body || document.documentElement
-    }
-    if (me.parentElement) {
-      wrap = typeof me.parentElement === 'string' ? (document.getElementById(me.parentElement) || document.documentElement) : me.parentElement
-    }
-
-    wrap.appendChild(main)
-
-    main.id = hui.makeGUID(me.id)
-    me.main = main.id
-
-    return main
-  },
   /**
    * @method appendControl
    * @description 父控件添加子控件. 注: 将子控件加到父控件下面的容器中也可以调用appendSelfTo
@@ -650,7 +393,7 @@ hui.Control.prototype = {
    * @public
    * @param {Control} uiObj 子控件.
    */
-  appendControl: function(uiObj) {
+  appendControl (uiObj) {
     return hui.Control.appendControl(this, uiObj)
   },
   /**
@@ -659,7 +402,7 @@ hui.Control.prototype = {
    * @memerberof hui.Control.prototype
    * @public
    */
-  validate: function(show_error) {
+  validate (show_error) {
     if (!hui.Validator) {
       window.console.error('hui.Validator is invalid')
       return false
@@ -669,18 +412,20 @@ hui.Control.prototype = {
       result = true,
       cc = me.cc,
       rule = me.rule || me.getAttribute('rule'),
+      // disabled 默认 false, ''
+      disabled = me.disabled || me.getAttribute('disabled'),
       c,
       list,
       m,
       n
 
-    if (rule && !hui.Control.getMain(me).disabled) {
+    if (rule && !disabled) {
       result = false
       list = String(rule).split('||')
-      for (var i = 0, len = list.length; i < len && !result; i++) {
+      for (let i = 0, len = list.length; i < len && !result; i++) {
         c = true
         m = list[i].split('&&')
-        for (var j = 0, len2 = m.length; j < len2; j++) {
+        for (let j = 0, len2 = m.length; j < len2; j++) {
           n = m[j]
           c = c && hui.Validator.applyRule(me, n, show_error)
         }
@@ -688,10 +433,10 @@ hui.Control.prototype = {
       }
     }
     // result ===  null
-    if (!rule && cc && !hui.Control.getMain(me).disabled) {
+    if (!rule && cc && !disabled) {
       result = true
       m = null
-      for (var i = 0, len = cc.length; i < len; i++) {
+      for (let i = 0, len = cc.length; i < len; i++) {
         n = cc[i].validate ? cc[i].validate(show_error) : me.validate.call(cc[i], show_error)
         result = n && result
         m = m === null && !n ? cc[i] : m
@@ -704,57 +449,8 @@ hui.Control.prototype = {
 }
 
 /**
- * @method hui.Control.find AllNodes
- * @description 获取所有子节点element
- * @private
- * @param {HTMLElement} main
- * @param {Function} 如果元素满足条件condition，如存在该属性,如'hui-type',则不遍历其下面的子元素
- */
-hui.Control.findAllNodes = function(main, condition) {
-  var childNode,
-    elements,
-    list,
-    childlist,
-    node
-  elements = []
-  list = []
-  childlist = main && main.children && main.children.length ? main.children : []
-  // 注：Nodelist是伪数组且IE不支持Array.prototype.slice.call(Nodelist)转化数组
-  for (var i = 0, len = childlist.length; i < len; i++) {
-    node = childlist[i]
-    list.unshift(node)
-  }
-
-  while (list.length) {
-    childNode = list.pop()
-    if (!childNode) continue
-
-    // 1. 无效DOM:          nn 不收录, 不遍历其子节点
-    // 2. 已经渲染过的控件: nn 不收录，不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') === 'true'
-    // 3. 未渲染过的控件:   yn 收录，  不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') !== 'true'
-    // 4. 非控件:           ny 不收录, 继续遍历子节点
-    // res: 收录|遍历 y/n
-    var res = condition ? condition(childNode) : 'yy'
-    if (res == 'yy' || res == 'yn') elements.unshift(childNode)
-    if (res == 'yy' || res == 'ny') {
-      childlist = childNode.children
-      if (!childlist || childlist.length < 1) continue
-      // 注：Nodelist是伪数组且IE不支持Array.prototype.slice.call(Nodelist)转化数组
-      for (var i = 0, len = childlist.length; i < len; i++) {
-        node = childlist[i]
-        list.unshift(node)
-      }
-    }
-  }
-  // 去掉顶层main,如不去掉处理复合控件时会导致死循环!!
-  if (elements[0] === main) elements.shift()
-
-  return elements.reverse()
-}
-
-/**
  * @method hui.Control.isChildControl
- * @description 判断一个解析前DOM元素是否是子控件，是则跳过非父控件的hui.Control.create()
+ * @description 判断一个解析前DOM元素是否是子控件，是则跳过非父控件的hui.Control.createNode()
  * @public
  * @param {String} elem DOM元素
  */
@@ -814,16 +510,16 @@ hui.Control.findAllControl = function(parentControl) {
  * @method hui.Control.getByCtrId
  * @description 根据控件id找到对应控件
  * @public
- * @param {Control} [parentControl] 可不传, 默认从当前Action开始找, 如果未使用action则直接从document.cc开始找
+ * @param {Control} [parentControl] 可不传, 默认从当前Action开始找, 如果未使用action则直接从document.documentElement.cc开始找
  * @param {String} id 控件id
  */
 hui.Control.getByCtrId = function(id) {
   var list,
     result = null
 
-  list = hui.Control.findAllControl(document)
+  list = hui.Control.findAllControl(document.documentElement)
   for (var i = 0, len = list.length; i < len; i++) {
-    if (hui.Control.parseCtrId(hui.Control.getMain(list[i])) === String(id)) {
+    if (hui.Control.parseCtrId(list[i]) === String(id)) {
       result = list[i]
     }
   }
@@ -842,9 +538,9 @@ hui.Control.getByFormnameAll = function(formname, parentNode) {
   var list = [],
     childNodes,
     item,
-    main = parentNode.getMain && parentNode.getMain() ? parentNode.getMain() : parentNode,
+    me = parentNode,
     /* 强制确认parentControl */
-    parentControl = parentNode && hui.Control.parseCtrId(main) ? parentNode : document
+    parentControl = parentNode && hui.Control.parseCtrId(me) ? parentNode : document
 
   if (formname) {
     formname = String(formname)
@@ -906,21 +602,12 @@ hui.Control.parseCtrId = function(elem) {
   return ((String((elem || {}).className).match(/hui_ctrid\d+/) || [])[0] || '')
 }
 
-hui.Control.getMain = function(ctr) {
-  if (hui.isES6()) return ctr
-  else {
-    if (!ctr) return {}
-    if (ctr.getMain) return ctr.getMain() || {}
-    if (ctr.main) return document.getElementById(ctr.main) || {}
-  }
-}
 hui.Control.isFormItem = function(ctr) {
   if (!ctr || ctr.isformitem === false) return false
   if (ctr.isformitem) return true
-  var main = hui.Control.getMain(ctr)
-  if (main.getAttribute && main.getAttribute('isformitem')) return true
-  var tagName = String(main.tagName).toLowerCase()
-  var tagType = '|' + String(main.type).toLowerCase() + '|'
+  if (ctr.getAttribute('isformitem')) return true
+  var tagName = String(ctr.tagName).toLowerCase()
+  var tagType = '|' + String(ctr.type).toLowerCase() + '|'
   if ((tagName === 'input' && '|button|reset|submit|file|image|'.indexOf(tagType) === -1) ||
     tagName === 'textarea' ||
     tagName === 'select') return true
@@ -928,32 +615,16 @@ hui.Control.isFormItem = function(ctr) {
 }
 
 // 解析:options一类的属性 <x-tag :datasource="{aa:123}"></x-tag>
-hui.Control.parseProperty = function(elem, main) {
+hui.Control.parseProperty = function(elem) {
   var list = elem.attributes
-  main = main || elem
   for (var i = list.length - 1; i > -1; i--) {
     if (!list[i]) continue;
     var str = list[i].name
     if (str && str.length > 1 && str.indexOf(':') === 0) {
-      main[str.replace(':', '')] = Function('return ' + (list[i].value || '""')).call(main)
+      elem[str.replace(':', '')] = Function('return ' + (list[i].value || '""')).call(elem)
     }
   }
 }
-
-// 解析@click一类的事件 <x-tag @onclick="alert(123)"></x-tag>
-hui.Control.parseMethod = function(elem, main) {
-  var list = elem.attributes
-  main = main || elem
-  for (var i = list.length - 1; i > -1; i--) {
-    if (list[i] && list[i].name && list[i].name.length > 1 && list[i].name.indexOf('@') === 0) {
-      var evtName = list[i].name.replace('@', '')
-      var handler = Function(list[i].value).bind(elem)
-      main[evtName] = handler
-      elem.addEventListener(evtName.replace(/^on/i, ''), handler, false)
-    }
-  }
-}
-
 
 /**
  * @method hui.Control.appendControl
@@ -969,7 +640,7 @@ hui.Control.appendControl = function(parent, uiObj) {
   // var parentControl = document
   // Add: 上面这样做静态没问题，动态生成appendSelfTo就会出问题，因此需要加上options.parentControl
   // Fixme: 第二次执行到这里hui.Master.get()居然是前一个action？
-  parent = parent || document
+  parent = parent || document.documentElement
   parent.cc = parent.cc || []
 
   // var ctrid = uiObj.parseCtrId ? uiObj.parseCtrId() : uiObj.id
@@ -996,7 +667,7 @@ hui.Control.appendControl = function(parent, uiObj) {
   }
   // 重置parentControl标识
   uiObj.parentControl = parent
-  // !!!不能移动DOM，需自行解决，因为会打乱html布局
+  // !!!不能移动DOM，需自行解决，因为会打乱html布局，所以才会注释下面的代码
   /*var parentNode = hui.Control.getMain(parent) || null,
     main = hui.Control.getMain(uiObj)
   if (parentNode && main) {
@@ -1004,7 +675,56 @@ hui.Control.appendControl = function(parent, uiObj) {
   };*/
 }
 
-hui.Control.initChildControl = function(main, options, opt_propMap) {
+/**
+ * @method hui.Control.find AllNodes
+ * @description 获取所有子节点element
+ * @private
+ * @param {HTMLElement} me
+ * @param {Function} 如果元素满足条件condition，如存在该属性,如'hui-type',则不遍历其下面的子元素
+ */
+hui.Control.findAllNodes = function(me, condition) {
+  var childNode,
+    elements,
+    list,
+    childlist,
+    node
+  elements = []
+  list = []
+  childlist = me && me.children && me.children.length ? me.children : []
+  // 注：Nodelist是伪数组且IE不支持Array.prototype.slice.call(Nodelist)转化数组
+  for (let i = 0, len = childlist.length; i < len; i++) {
+    node = childlist[i]
+    list.unshift(node)
+  }
+
+  while (list.length) {
+    childNode = list.pop()
+    if (!childNode) continue
+
+    // res: 收录|遍历 y/n
+    // 1. 无效DOM:          nn 不收录, 不遍历其子节点
+    // 2. 已经渲染过的控件: nn 不收录，不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') === 'true'
+    // 3. 未渲染过的控件:   yn 收录，  不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') !== 'true'
+    // 4. 非控件:           ny 不收录, 继续遍历子节点
+    let res = condition ? condition(childNode) : 'yy'
+    if (res == 'yy' || res == 'yn') elements.unshift(childNode)
+    if (res == 'yy' || res == 'ny') {
+      childlist = childNode.children
+      if (!childlist || childlist.length < 1) continue
+      // 注：Nodelist是伪数组且IE不支持Array.prototype.slice.call(Nodelist)转化数组
+      for (let i = 0, len = childlist.length; i < len; i++) {
+        node = childlist[i]
+        list.unshift(node)
+      }
+    }
+  }
+  // 去掉顶层me,如不去掉处理复合控件时会导致死循环!!
+  if (elements[0] === me) elements.shift()
+
+  return elements.reverse()
+}
+
+hui.Control.initChildControl1 = function(me, options, opt_propMap) {
   opt_propMap = opt_propMap || {} // 这里并不会缓存BaseModel，因此销毁空间时无须担心BaseModel
 
   var uiEls = []
@@ -1012,13 +732,15 @@ hui.Control.initChildControl = function(main, options, opt_propMap) {
 
   // 把dom元素存储到临时数组中
   // 控件渲染的过程会导致elements的改变
-  uiEls = hui.Control.findAllNodes(main, function(item) {
+  uiEls = hui.Control.findAllNodes(me, function(item) {
+    // res: 收录 y/n 遍历 y/n
     // 1. 无效DOM:          nn 不收录, 不遍历其子节点
-    // 2. 已经渲染过的控件: nn 不收录，不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') === 'true'
+    // 2. 已经渲染过的控件: yy 收录，  遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') === 'true'
     // 3. 未渲染过的控件:   yn 收录，  不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') !== 'true'
     // 4. 非控件:           ny 不收录, 继续遍历子节点
-    // res: 收录 y/n 遍历 y/n
-    if (!item || !item.getAttribute || item.getAttribute('_rendered') === 'true') return 'nn'
+    if (!item || !item.getAttribute) return 'nn'
+    if (item.getAttribute('_rendered') === 'true') return 'yy'
+    
     var tag = String(item.tagName).toLowerCase()
     if (item.getAttribute('hui-type') || tag === 'x-tag') return 'yn'
     if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) return 'yn'
@@ -1027,18 +749,48 @@ hui.Control.initChildControl = function(main, options, opt_propMap) {
 
   for (var j = 0, len2 = uiEls.length; j < len2; j++) {
     elem = uiEls[j]
-    if (!hui.Control.isChildControl(elem, uiEls)) {
-      if (!hui.isES6()) {
-        var control = hui.Control.create(elem, options, opt_propMap)
-      } else {
-        main.cc = main.cc || []
-        main.cc.push(elem)
-        elem.setAttribute('_rendered', 'true')
-      }
+    
+    if (elem.getAttribute('_rendered') !== 'true') {
+      hui.Control.createNode(elem, options, opt_propMap)
+      // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
+      
+      me.cc = me.cc || []
+      me.cc.push(elem)
+      // elem.enterControl()
+      elem.setAttribute('_rendered', 'true')
+    } else {
+      window['x-tag'].prototype.parseParentControl.call(elem)
     }
   }
 
 }
+
+hui.Control.initChildControl = function(me, options, opt_propMap) {
+  var sign = ''
+  var tag = String(me.tagName).toLowerCase()
+  if (me.getAttribute('hui-type') || tag === 'x-tag') sign = 'y'
+  else if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) sign = 'y'
+  
+  if (sign === 'y' && me.getAttribute('_rendered') !== 'true') {
+    hui.Control.createNode(me, options, opt_propMap)
+    // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
+    me.setAttribute('_rendered', 'true')
+    return ''
+  }
+  
+  if (sign === 'y' && me.getAttribute('_rendered') === 'true') {
+    window['x-tag'].prototype.parseParentControl.call(me)
+  }
+  
+  if (!me.childNodes || !me.childNodes.length) return ''
+  for (let j = 0, len = me.childNodes.length; j < len; j++) {
+    var child = me.childNodes[j]
+    if (!child || !child.getAttribute || !child.tagName) continue; 
+    if (child.tagName === 'head' || child.tagName === 'HEAD') continue; 
+    hui.Control.initChildControl(child, options, opt_propMap)
+  }
+}
+
 
 /**
  * @method hui.Control.disposeList
@@ -1056,116 +808,88 @@ hui.Control.disposeList = function(list) {
   }
 };
 
-(function() {
-  if (hui.isES6()) {
-    eval([
-      'window["x-tag"] = class extends HTMLElement {',
-      '  constructor() {',
-      '    /* // 必须调用父类的构造函数   */',
-      '    super() ',
-      '  }',
-      '  /* // 相当于v0中的attributeChangedCallback,但新增一个可选的observedAttributes属性来约束所监听的属性数目 */',
-      '  attributeChangedCallback(attrName, oldVal, newVal) {',
-      '    console.log("attributeChangedCallback-change " + attrName + " from " + oldVal + " to " + newVal)',
-      '  }',
-      '  ',
-      '  /* // 缺省时表示attributeChangedCallback将监听所有属性变化，若返回数组则仅监听数组中的属性变化 */',
-      '  static get observedAttributes() {',
-      '    return ["disabled", "value"]',
-      '  }',
-      '  get textContent() {',
-      '    return this.querySelector(".content").textContent',
-      '  }',
-      '  set textContent(val) {',
-      '    this.querySelector(".content").textContent = val',
-      '  }',
-      '  getMain() {',
-      '    return this',
-      '  }',
-      '  ',
-      '  /* // 相当于v0中的attachedCallback */',
-      '  connectedCallback() {',
-      '    /* // console.log("invoked connectedCallback!") */',
-      '    if (super.connectedCallback) super.connectedCallback()',
-      '    ',
-      '    /* // 解析自定义属性和方法:value和@click */',
-      '    hui.Control.parseProperty(this)',
-      '    hui.Control.parseMethod(this)',
-      '    ',
-      '    /* // 当整个DOM都被移除时，停止执行 childrenChangedCallback (setTimeout)，childrenChangedTimer 很重要！！ */',
-      '    this.childrenChangedTimer = window.requestAnimationFrame(function() {',
-      '      var main = this',
-      '      var ctrid = hui.Control.parseCtrId(main)',
-      '      if (!ctrid) {',
-      '        ctrid = hui.makeGUID("")',
-      '        main.className = (main.className + " hui_ctrid" + ctrid).replace(/^(\\s+|\\s+$)/g, "")',
-      '      }',
-      '      ',
-      '      if (main.childrenChangedCallback) {',
-      '        main.childrenChangedCallback()',
-      '      }',
-      '      if (main.childrenRenderFinish) {',
-      '        main.childrenRenderFinish()',
-      '      }',
-      '    }.bind(this))',
-      '  }',
-      '  /* // 元素DOM树上移除时触发 */',
-      '  /* // 相当于v0中的detachedCallback */',
-      '  disconnectedCallback() {',
-      '    /* // console.log("invoked disconnectedCallback!") */',
-      '    if (super.disconnectedCallback) super.disconnectedCallback()',
-      '    var me = this',
-      '    ',
-      '    /* // 停止执行 childrenChangedCallback 非常重要！ */',
-      '    if (me.childrenChangedTimer) {',
-      '      window.cancelAnimationFrame(me.childrenChangedTimer)',
-      '      me.childrenChangedTimer = null',
-      '    }',
-      '    if (me) {',
-      '      /* // 从父控件的childControl中删除引用 */',
-      '      if (me.parentControl) {',
-      '        var cc = me.parentControl.cc',
-      '        for (var i = 0, len = cc.length; i < len; i++) {',
-      '          if (cc[i] === me) {',
-      '            cc.splice(i, 1)',
-      '            break',
-      '          }',
-      '        }',
-      '      }',
-      '    }',
-      '  }',
-      '}',
-      'window.customElements.define("x-tag", window["x-tag"])'
-    ].join('\n'))
-  } else {
-    var tmp = {
-      'x-tag': function(options, pending, opt_propMap) {
-        options = options || {}
-        options.tagName = options.tagName || 'x-tag'
-        hui.Control.call(this, options, pending, opt_propMap)
+window['x-tag'] = class extends HTMLElement {
+  constructor() {
+    /* // 必须调用父类的构造函数   */
+    super() 
+  }
+  /* // 相当于v0中的attributeChangedCallback,但新增一个可选的observedAttributes属性来约束所监听的属性数目 */
+  attributeChangedCallback(attrName, oldVal, newVal) {
+    console.log('attributeChangedCallback-change ' + attrName + ' from ' + oldVal + ' to ' + newVal)
+  }
+  
+  /* // 缺省时表示attributeChangedCallback将监听所有属性变化，若返回数组则仅监听数组中的属性变化 */
+  static get observedAttributes() {
+    return ['disabled', 'value']
+  }
+  get textContent() {
+    return this.querySelector('.content').textContent
+  }
+  set textContent(val) {
+    this.querySelector('.content').textContent = val
+  }
+  
+  /* // 相当于v0中的attachedCallback */
+  connectedCallback() {
+    /* // console.log('invoked connectedCallback!') */
+    if (super.connectedCallback) super.connectedCallback()
+    
+    /* // 解析自定义属性和方法:value */
+    hui.Control.parseProperty(this)
+    // hui.Control.parseMethod(this) // 使用原生DOM后无需再像@click来转化一次定义方法，直接用onclick就可以了！
+    
+    /* // 当整个DOM都被移除时，停止执行 childrenChangedCallback (setTimeout)，childrenChangedTimer 很重要！！ */
+    this.childrenChangedTimer = window.requestAnimationFrame(function() {
+      var me = this
+      var ctrid = hui.Control.parseCtrId(me)
+      if (!ctrid) {
+        ctrid = hui.makeGUID('')
+        me.className = (me.className + ' hui_ctrid' + ctrid).replace(/^(\\s+|\\s+$)/g, '')
+      }
+      
+      if (me.childrenChangedCallback) {
+        me.childrenChangedCallback()
+      }
+      if (me.childrenRenderFinish) {
+        me.childrenRenderFinish()
+      }
+    }.bind(this))
+  }
+  /* // 元素DOM树上移除时触发 */
+  /* // 相当于v0中的detachedCallback */
+  disconnectedCallback() {
+    /* // console.log('invoked disconnectedCallback!') */
+    if (super.disconnectedCallback) super.disconnectedCallback()
+    var me = this
+    
+    /* // 停止执行 childrenChangedCallback 非常重要！ */
+    if (me.childrenChangedTimer) {
+      window.cancelAnimationFrame(me.childrenChangedTimer)
+      me.childrenChangedTimer = null
+    }
+    if (me) {
+      /* // 从父控件的childControl中删除引用 */
+      if (me.parentControl) {
+        var cc = me.parentControl.cc
+        for (var i = 0, len = cc.length; i < len; i++) {
+          if (cc[i] === me) {
+            cc.splice(i, 1)
+            break
+          }
+        }
       }
     }
-    tmp['x-tag'].prototype.render = function(opt_propMap) {
-      hui.Control.prototype.render.call(this, opt_propMap)
-      var me = this
-      // 渲染对话框
-      hui.Control.initChildControl(me.getMain(), {}, opt_propMap)
-    }
-    // hui.inherits(tmp['x-tag'], hui.Control);
-    window['x-tag'] = tmp['x-tag']
-    tmp = null
-    document.createElement('x-tag');
   }
-}());
+}
+window.customElements.define('x-tag', window['x-tag'])
 
 /* // 相当于v0中的detachedCallback */
 window['x-tag'].prototype.childrenChangedCallback = function() {
   // console.log('invoked childrenChangedCallback!')
   var me = this
-  var main = me.getMain()
   if (me.onChildrenRenderFinishHandle) me.onChildrenRenderFinishHandle()
 
-  var ctrid = hui.Control.parseCtrId(main)
+  var ctrid = hui.Control.parseCtrId(me)
   if (ctrid) {
     me.parseParentControl()
 
@@ -1187,12 +911,11 @@ window['x-tag'].prototype.onChildrenRenderFinish = function(fn) {
 window['x-tag'].prototype.onChildrenRenderFinishHandle = function() {
   // console.log('invoked onChildrenRenderFinish!')
   var me = this
-  var main = me.getMain()
-
-  var ctrid = hui.Control.parseCtrId(main)
+  
+  var ctrid = hui.Control.parseCtrId(me)
   if (ctrid) {
-    main.setAttribute('_rendered', 'true')
-    hui.Control.initChildControl(main)
+    me.setAttribute('_rendered', 'true')
+    hui.Control.initChildControl(me)
   }
 
   if (me.childrenRenderFinishCallback && me.childrenRenderFinishCallback.length) {
@@ -1213,13 +936,12 @@ window['x-tag'].prototype.onChildrenRenderFinishHandle = function() {
 window['x-tag'].prototype.dispose = function() {
   var me = this,
     cc,
-    list,
-    main = hui.Control.getMain(me)
+    list
 
   // 从父控件的childControl中删除引用
   if (me.parentControl) {
     cc = me.parentControl.cc
-    for (var i = 0, len = cc.length; i < len; i++) {
+    for (let i = 0, len = cc.length; i < len; i++) {
       if (cc[i] === me) {
         cc.splice(i, 1)
         break
@@ -1227,22 +949,20 @@ window['x-tag'].prototype.dispose = function() {
     }
   }
   if (me.disposeChild) me.disposeChild()
-  if (main) {
-    // 释放控件主区域的常用事件
-    list = ('onmouseover|onmouseout|onmousedown|onmouseup|onkeyup|onkeydown|onkeypress|onchange|onpropertychange|' +
-      'onfocus|onblur|onclick|ondblclick|ontouchstart|ontouchmove|ontouchend|ondragover|ondrop|ondragstart').split('|')
-    for (var i = 0, len = list.length; i < len; i++) {
-      try {
-        main[list[i]] = function() {}
-      } catch (e) {}
-    }
-
-    // 清空HTML内容
-    if (main.innerHTML) {
-      main.innerHTML = ''
-    }
-    main.parentNode.removeChild(main)
+  // 释放控件主区域的常用事件
+  list = ('onmouseover|onmouseout|onmousedown|onmouseup|onkeyup|onkeydown|onkeypress|onchange|onpropertychange|' +
+    'onfocus|onblur|onclick|ondblclick|ontouchstart|ontouchmove|ontouchend|ondragover|ondrop|ondragstart').split('|')
+  for (let i = 0, len = list.length; i < len; i++) {
+    try {
+      me[list[i]] = function() {}
+    } catch (e) {}
   }
+
+  // 清空HTML内容
+  if (me.innerHTML) {
+    me.innerHTML = ''
+  }
+  me.parentNode.removeChild(me)
 }
 window['x-tag'].prototype.disposeChild = function() {
   var me = this
@@ -1258,15 +978,17 @@ window['x-tag'].prototype.disposeChild = function() {
 }
 
 window['x-tag'].prototype.initChildControl = function(data, opt_propMap) {
-  hui.Control.initChildControl(hui.Control.getMain(this), data, opt_propMap)
+  hui.Control.initChildControl(this, data, opt_propMap)
 }
 
 window['x-tag'].prototype.parseParentControl = function() {
   var me = this
-  var main = hui.Control.getMain(me)
+  // 先暂存到document.documentElement.cc下
+  document.documentElement.cc.push(me)
+  me.parentControl = document.documentElement
   // 动态生成control需手动维护me.parentControl
   // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
-  var parentElement = main
+  var parentElement = me
   while (parentElement && parentElement.tagName && parentElement.parentNode) {
     parentElement = parentElement.parentNode
     if (!parentElement) break
@@ -1286,7 +1008,7 @@ window['x-tag'].prototype.parseParentControl = function() {
   }
 }
 window['x-tag'].prototype.getCtrId = function(sub) {
-  return hui.Control.parseCtrId(this.getMain ? this.getMain() : this) + (sub ? '_' + sub : '')
+  return hui.Control.parseCtrId(this) + (sub ? '_' + sub : '')
 };
 
 (function() {
@@ -1302,47 +1024,32 @@ window['x-tag'].prototype.getCtrId = function(sub) {
 // 工厂方法
 // 用于便捷创建元素
 hui.createClass = function(tagName, opt) {
-  var clazz
   tagName = String(tagName).toLowerCase()
-  if (hui.isES6()) {
-    // 这里依赖 x-tag 的！！
-    eval([
-      'clazz = class extends window["x-tag"] {',
-      '  constructor() {',
-      '    super()',
-      '  } ',
-      '  connectedCallback () {',
-      '    if (super.connectedCallback) super.connectedCallback()',
-      '    if (opt.connectedCallback) opt.connectedCallback.call(this)',
-      '  }',
-      '  childrenChangedCallback () {',
-      '    if (opt && opt.init) opt.init.call(this)',
-      '    if (super.childrenChangedCallback) super.childrenChangedCallback()',
-      '    if (opt.childrenChangedCallback) opt.childrenChangedCallback.call(this)',
-      '    if (super.onChildrenRenderFinishHandle) super.onChildrenRenderFinishHandle()',
-      '    if (opt.onChildrenRenderFinishHandle) opt.onChildrenRenderFinishHandle()',
-      '    // 注：opt.onChildrenRenderFinish 会在 super.onChildrenRenderFinish 执行',
-      '    // if (opt.onChildrenRenderFinish) opt.onChildrenRenderFinish()',
-      '  }',
-      '  disconnectedCallback () {',
-      '    if (super.disconnectedCallback) super.disconnectedCallback()',
-      '    if (opt.disconnectedCallback) opt.disconnectedCallback.call(this)',
-      '  }',
-      '}',
-      'window.customElements.define(tagName, clazz)'
-    ].join('\n'))
-  } else {
-    // 这里依赖 x-tag 的！！
-    document.createElement(tagName)
-    opt = opt || {}
-    clazz = opt[tagName] || opt.init || function(options, pending, opt_propMap) {
-      window['x-tag'].call(this, options, pending, opt_propMap)
+  // 这里依赖 x-tag 的！！
+  var clazz = class extends window['x-tag'] {
+    constructor() {
+      super()
+    } 
+    connectedCallback () {
+      if (super.connectedCallback) super.connectedCallback()
+      if (opt.connectedCallback) opt.connectedCallback.call(this)
     }
-    clazz.prototype.constructor = clazz
-    var superClass = typeof(opt.superClass) == 'function' ? opt.superClass : window['x-tag']
-    hui.inherits(clazz, superClass)
+    childrenChangedCallback () {
+      if (opt && opt.init) opt.init.call(this)
+      if (super.childrenChangedCallback) super.childrenChangedCallback()
+      if (opt.childrenChangedCallback) opt.childrenChangedCallback.call(this)
+      if (super.onChildrenRenderFinishHandle) super.onChildrenRenderFinishHandle()
+      if (opt.onChildrenRenderFinishHandle) opt.onChildrenRenderFinishHandle()
+      // 注：opt.onChildrenRenderFinish 会在 super.onChildrenRenderFinish 执行
+      // if (opt.onChildrenRenderFinish) opt.onChildrenRenderFinish()
+    }
+    disconnectedCallback () {
+      if (super.disconnectedCallback) super.disconnectedCallback()
+      if (opt.disconnectedCallback) opt.disconnectedCallback.call(this)
+    }
   }
-
+  window.customElements.define(tagName, clazz)
+  
   for (var i in opt) {
     if (opt.hasOwnProperty(i) && !clazz.prototype.hasOwnProperty(i)) {
       // Fixit: clazz.prototype.onselect throw Error
@@ -1361,7 +1068,7 @@ hui.createClass = function(tagName, opt) {
 }
 
 /**
- * @method hui.Control.create
+ * @method hui.Control.createNode
  * @description 创建一个控件对象，注意是对象实例不是构造函数!!
  * @public
  * @param {String} type 控件类型
@@ -1369,9 +1076,9 @@ hui.createClass = function(tagName, opt) {
  * @return {hui.Control} 创建的控件对象
  * @example 
  * <button hui-type="Button" id="submit">submit</button>
- * hui.Control.create(hui.bocument.getElementById('submit'))
+ * hui.Control.createNode(hui.bocument.getElementById('submit'))
  */
-hui.Control.create = function(type, options, opt_propMap) {
+hui.Control.createNode = function(type, options, opt_propMap) {
   if (Object.prototype.toString.call(type) == '[object String]') {
     // if (options && options.type.getAttribute('_rendered') === 'true') return false
     options = options || {}
@@ -1407,7 +1114,7 @@ hui.Control.create = function(type, options, opt_propMap) {
 
     return uiObj
   }
-  // 注：支持hui.Control.create(HTMLElement)
+  // 注：支持hui.Control.createNode(HTMLElement)
   if (type && type.getAttribute && (type.getAttribute('hui-type') || !String(type.tagName).toLowerCase().indexOf('x-'))) {
     if (type.getAttribute('_rendered') === 'true') return false
     options = options || {}
@@ -1419,7 +1126,7 @@ hui.Control.create = function(type, options, opt_propMap) {
     }
     var attrs = {}
     hui.Control.parseProperty(type, attrs)
-    hui.Control.parseMethod(type, attrs)
+    // hui.Control.parseMethod(type, attrs)
 
     for (var i in options) {
       if (i && options.hasOwnProperty(i)) {
@@ -1430,12 +1137,35 @@ hui.Control.create = function(type, options, opt_propMap) {
     attrs.id = attrs.id ? attrs.id : hui.makeGUID(attrs.formname)
     // 注：type即elem
     type.id = type.id || hui.makeGUID(attrs.id)
-    attrs.main = type.id
-
+    
     var tagName = String(type.getAttribute('hui-type') || type.tagName).toLowerCase()
-    return hui.Control.create(tagName, attrs, opt_propMap)
+    // return hui.Control.createNode(tagName, attrs, opt_propMap)
+
+    var uiClazz = window[tagName]
+    if (!uiClazz) {
+      console.error('Need require(\'' + String(tagName).toLowerCase() + '\') or "' + String(tagName).toLowerCase() + '.js" is not loaded successfully.')
+    }
+    // 创建控件对象
+    for (let m in hui.Control.prototype) {
+      if (type[m] === undefined) type[m] = hui.Control.prototype[m]
+    }
+    hui.Control.call(type, options, '', opt_propMap)
+    
+    // 检查是否有 enterControl 方法
+    if (!type.enterControl) {
+      var child = type,
+        parent = hui.Control.prototype
+      for (var key in parent) {
+        if (parent.hasOwnProperty(key)) {
+          child[key] = parent[key]
+        }
+      }
+    }
+    if (type.enterControl) type.enterControl(opt_propMap)
+
+    return type
   }
-  // 注：支持hui.Control.create(HTMLElement container)
+  // 注：支持hui.Control.createNode(HTMLElement container)
   if (type && type.getAttribute && !type.getAttribute('hui-type') && !type.getAttribute('_rendered')) {
     hui.Control.initChildControl(type, options, opt_propMap)
   }
@@ -1443,14 +1173,43 @@ hui.Control.create = function(type, options, opt_propMap) {
 
 // Shortkey
 Object.defineProperty(window, 'cc', {
-  get: function() {
-    return document.cc
+  get () {
+    return document.documentElement.cc
   },
-  set: function(newValue) {
-    document.cc = newValue
+  set (newValue) {
+    document.documentElement.cc = newValue
   }
 })
 
 // window.kk = new window['x-tag']()
 // document.body.appendChild(window.kk)
 // window.kk.innerHTML = 'kk'
+
+;(function () {
+  // Options for the observer (which mutations to observe)
+  var config = { attributes: true, childList: true, subtree: true };
+
+  // Callback function to execute when mutations are observed
+  var callback = function(mutationsList) {
+    for(let mutation of mutationsList) {
+      if (mutation.type == 'childList') {
+        console.log('A child node has been added or removed.')
+        if (mutation.target) hui.Control.initChildControl(document.documentElement)
+      }
+      else if (mutation.type == 'attributes') {
+        console.log('The ' + mutation.attributeName + ' attribute was modified.')
+      } else {
+        console.log('The ' + mutation.attributeName + ' subtree was modified.')
+      }
+    }
+  }
+
+  // Create an observer instance linked to the callback function
+  var observer = new MutationObserver(callback)
+
+  // Start observing the target node for configured mutations
+  observer.observe(document.documentElement, config)
+
+  // Later, you can stop observing
+  // observer.disconnect();
+})();
