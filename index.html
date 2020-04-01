@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>x-alert</title>
+  <script src="hui.js"></script>
+  <script src="hui_control.js"></script>
+  <script src="x-alert.js"></script>
+</head>
+<body>
+  <div style="margin: auto; width: 750px;">
+    <h2 style="text-align: center">HUI MVC框架2.0</h2>
+    <p>
+      HUI MVC框架2.0采用了<a target="_blank" href="https://html.spec.whatwg.org/multipage/custom-elements.html">Custom Elements v1</a>所定义的方式创建自定义组件/元素，因此在2.0中可以直接使用&lt;x-tag&gt;&lt;/x-tag&gt;方式在页面插入自定义元素/组件，
+      同时也兼容1.0中通过自定义属性hui-type="x-tag"的方式声明自定义元素/组件。
+    </p>
+
+    <p>示例如下：</p>
+    <x-tag id="person" formname="person" isformitem="true">
+      <p>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <label>姓名: </label>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="text" hui-type="x-tag" formname="username" value="Lily">
+        <br/> &nbsp;&nbsp;&nbsp;&nbsp;
+        <label>生日: </label>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="date" hui-type="x-tag" formname="birthday">
+        <br/> &nbsp;&nbsp;&nbsp;&nbsp;
+        <label>电话: </label>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="number" hui-type="x-tag" formname="mobile">
+        <br/>
+      </p>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <button class="btn1" onclick="doit1()">读取</button>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <button class="btn2" onclick="doit2()">修改</button>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <button class="btn3" onclick="doit3()">显示</button>
+    </x-tag>
+    <x-tag>
+      <x-alert>asfdsaf</x-alert>
+    </x-tag>
+    
+    <script>
+      hui.Control.initChildControl(document.body)
+      // cc[1].cc[1].style.display='block'
+      setTimeout(function () {
+        console.log(cc[1].cc)
+      }, 200)
+      function doit1(){
+        alert(cc[0].getParamMap().username)
+      }
+      function doit2(){
+        cc[0].setValueByTree({username: "Tom", birthday: "2008-08-20", mobile: "13866669999"})
+      }
+      function doit3(){
+        cc[1].cc[0].setContent(cc[0].getParamMap().username)
+        cc[1].cc[0].getMain().style.display = 'block'
+      }
+    </script>
+    <p>提示 CTR+U 可以查看页面源码</p>
+  </div>
+</body>
+</html>
