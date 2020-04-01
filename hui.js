@@ -765,7 +765,7 @@ hui.removeClass = function(element, className, className2) {
  * @return {String}
  */
 hui.makeGUID = (function() {
-  var guid = 10001
+  var guid = 1001
   return function(formname) {
     return (formname ? formname : '') + (guid++)
   }

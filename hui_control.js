@@ -359,7 +359,7 @@ hui.Control.prototype = {
       }
     }
 
-    me.parseParentControl()
+    window['x-tag'].prototype.parseParentControl.call(me)
     
     // 1. initView()会在render调用父类的render时自动调用，
     // 2. hui.Control.createNode()会通过enterControl来执行render
@@ -633,8 +633,6 @@ hui.Control.parseProperty = function(elem) {
  * @param {Control} uiObj 子控件.
  */
 hui.Control.appendControl = function(parent, uiObj) {
-  var i, len
-
   // parentControl父控件不传则默认为document对象
   // parentControl父控件默认为document对象, 不是的话后面会再改回来. 
   // var parentControl = document
@@ -647,7 +645,7 @@ hui.Control.appendControl = function(parent, uiObj) {
   // 注：从原来的父控件childControl中移除
   if (uiObj.parentControl && uiObj.parentControl.cc && uiObj.parentControl.cc != parent.cc) {
     var list = uiObj.parentControl.cc
-    for (i = list.length - 1; i > -1; i--) {
+    for (let i = list.length - 1; i > -1; i--) {
       if (list[i] === uiObj) {
         list.splice(i, 1)
       }
@@ -655,14 +653,7 @@ hui.Control.appendControl = function(parent, uiObj) {
   }
 
   // !!!悲催的案例,如果将childControl放在prototype里, 这里parent.cc===uiObj.cc!!!
-  var exist = false
-  for (i = 0, len = parent.cc.length; i < len; i++) {
-    if (parent.cc[i] === uiObj) {
-      exist = true
-      break
-    }
-  }
-  if (!exist) {
+  if (!parent.cc.find(it => it === uiObj)) {
     parent.cc.push(uiObj)
   }
   // 重置parentControl标识
@@ -675,6 +666,31 @@ hui.Control.appendControl = function(parent, uiObj) {
   };*/
 }
 
+hui.Control.initChildControl2 = function(me, options, opt_propMap) {
+  var sign = ''
+  var tag = String(me.tagName).toLowerCase()
+  if (me.getAttribute('hui-type') || tag === 'x-tag') sign = 'y'
+  else if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) sign = 'y'
+  
+  if (sign === 'y' && me.getAttribute('_rendered') !== 'true') {
+    hui.Control.createNode(me, options, opt_propMap)
+    // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
+    me.setAttribute('_rendered', 'true')
+    return ''
+  }
+  
+  if (sign === 'y' && me.getAttribute('_rendered') === 'true') {
+    window['x-tag'].prototype.parseParentControl.call(me)
+  }
+  
+  if (!me.childNodes || !me.childNodes.length) return ''
+  for (let j = 0, len = me.childNodes.length; j < len; j++) {
+    var child = me.childNodes[j]
+    if (!child || !child.getAttribute || !child.tagName) continue; 
+    if (child.tagName === 'head' || child.tagName === 'HEAD') continue; 
+    hui.Control.initChildControl(child, options, opt_propMap)
+  }
+}
 /**
  * @method hui.Control.find AllNodes
  * @description 获取所有子节点element
@@ -724,7 +740,9 @@ hui.Control.findAllNodes = function(me, condition) {
   return elements.reverse()
 }
 
-hui.Control.initChildControl1 = function(me, options, opt_propMap) {
+hui.Control.initChildControl = function(me, options, opt_propMap) {
+  if (me.parsing) return me;
+  me.parsing = true
   opt_propMap = opt_propMap || {} // 这里并不会缓存BaseModel，因此销毁空间时无须担心BaseModel
 
   var uiEls = []
@@ -739,7 +757,7 @@ hui.Control.initChildControl1 = function(me, options, opt_propMap) {
     // 3. 未渲染过的控件:   yn 收录，  不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') !== 'true'
     // 4. 非控件:           ny 不收录, 继续遍历子节点
     if (!item || !item.getAttribute) return 'nn'
-    if (item.getAttribute('_rendered') === 'true') return 'yy'
+    if (item.getAttribute('_rendered') === 'true') return 'ny'
     
     var tag = String(item.tagName).toLowerCase()
     if (item.getAttribute('hui-type') || tag === 'x-tag') return 'yn'
@@ -747,47 +765,41 @@ hui.Control.initChildControl1 = function(me, options, opt_propMap) {
     return 'ny'
   })
 
-  for (var j = 0, len2 = uiEls.length; j < len2; j++) {
+  for (let j = 0, len2 = uiEls.length; j < len2; j++) {
     elem = uiEls[j]
+    if (!hui.Control.isChildControl(elem, me.cc || [])) continue;
     
-    if (elem.getAttribute('_rendered') !== 'true') {
-      hui.Control.createNode(elem, options, opt_propMap)
-      // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
-      
-      me.cc = me.cc || []
-      me.cc.push(elem)
-      // elem.enterControl()
-      elem.setAttribute('_rendered', 'true')
-    } else {
-      window['x-tag'].prototype.parseParentControl.call(elem)
-    }
-  }
-
-}
-
-hui.Control.initChildControl = function(me, options, opt_propMap) {
-  var sign = ''
-  var tag = String(me.tagName).toLowerCase()
-  if (me.getAttribute('hui-type') || tag === 'x-tag') sign = 'y'
-  else if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) sign = 'y'
-  
-  if (sign === 'y' && me.getAttribute('_rendered') !== 'true') {
-    hui.Control.createNode(me, options, opt_propMap)
+    hui.Control.createNode(elem, options, opt_propMap)
     // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
-    me.setAttribute('_rendered', 'true')
-    return ''
+    me.cc = me.cc || []
+    me.cc.push(elem)
+    // elem.enterControl()
+    elem.setAttribute('_rendered', 'true')
   }
-  
-  if (sign === 'y' && me.getAttribute('_rendered') === 'true') {
-    window['x-tag'].prototype.parseParentControl.call(me)
+
+
+  // 把dom元素存储到临时数组中
+  // 控件渲染的过程会导致elements的改变
+  uiEls = hui.Control.findAllNodes(me, function(item) {
+    // res: 收录 y/n 遍历 y/n
+    // 1. 无效DOM:          nn 不收录, 不遍历其子节点
+    // 2. 已经渲染过的控件: yy 收录，  遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') === 'true'
+    // 3. 未渲染过的控件:   yn 收录，  不遍历其子节点. hui-type或x-tag && item.getAttribute('_rendered') !== 'true'
+    // 4. 非控件:           ny 不收录, 继续遍历子节点
+    if (!item || !item.getAttribute) return 'nn'
+    if (item.getAttribute('_rendered') === 'true') return 'yy'
+    return 'ny'
+  })
+
+  for (let j = 0, len2 = uiEls.length; j < len2; j++) {
+    elem = uiEls[j]
+    window['x-tag'].prototype.parseParentControl.call(elem)
   }
-  
-  if (!me.childNodes || !me.childNodes.length) return ''
-  for (let j = 0, len = me.childNodes.length; j < len; j++) {
-    var child = me.childNodes[j]
-    if (!child || !child.getAttribute || !child.tagName) continue; 
-    if (child.tagName === 'head' || child.tagName === 'HEAD') continue; 
-    hui.Control.initChildControl(child, options, opt_propMap)
+  me.parsing = false
+  if (hui.Control.nextStick) {
+    let fn = hui.Control.nextStick
+    hui.Control.nextStick = null
+    fn()
   }
 }
 
@@ -984,24 +996,26 @@ window['x-tag'].prototype.initChildControl = function(data, opt_propMap) {
 window['x-tag'].prototype.parseParentControl = function() {
   var me = this
   // 先暂存到document.documentElement.cc下
-  document.documentElement.cc.push(me)
+  if (!document.documentElement.cc.find(it => it === me)) {
+    document.documentElement.cc.push(me)
+  }
   me.parentControl = document.documentElement
   // 动态生成control需手动维护me.parentControl
   // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
-  var parentElement = me
-  while (parentElement && parentElement.tagName && parentElement.parentNode) {
-    parentElement = parentElement.parentNode
-    if (!parentElement) break
+  var parent = me
+  while (parent && parent.tagName && parent.parentNode) {
+    parent = parent.parentNode
+    if (!parent) break
 
     //label标签自带control属性!!
-    var ctrid = hui.Control.parseCtrId(parentElement)
+    var ctrid = hui.Control.parseCtrId(parent)
     var control = ctrid ? hui.Control.getByCtrId(ctrid) : null
     if (control) {
       hui.Control.appendControl(control, me)
       break
     }
     // 未找到直接父控件则将control从hui.window.childControl移动到action.childControl中
-    else if (',html,body,'.indexOf(',' + String(parentElement.tagName).toLowerCase() + ',') != -1) {
+    else if (',html,body,'.indexOf(',' + String(parent.tagName).toLowerCase() + ',') != -1) {
       hui.Control.appendControl(null, me)
       break
     }
@@ -1141,7 +1155,7 @@ hui.Control.createNode = function(type, options, opt_propMap) {
     var tagName = String(type.getAttribute('hui-type') || type.tagName).toLowerCase()
     // return hui.Control.createNode(tagName, attrs, opt_propMap)
 
-    var uiClazz = window[tagName]
+    let uiClazz = window[tagName]
     if (!uiClazz) {
       console.error('Need require(\'' + String(tagName).toLowerCase() + '\') or "' + String(tagName).toLowerCase() + '.js" is not loaded successfully.')
     }
@@ -1153,9 +1167,9 @@ hui.Control.createNode = function(type, options, opt_propMap) {
     
     // 检查是否有 enterControl 方法
     if (!type.enterControl) {
-      var child = type,
+      let child = type,
         parent = hui.Control.prototype
-      for (var key in parent) {
+      for (let key in parent) {
         if (parent.hasOwnProperty(key)) {
           child[key] = parent[key]
         }
@@ -1171,6 +1185,7 @@ hui.Control.createNode = function(type, options, opt_propMap) {
   }
 }
 
+document.documentElement.cc = document.documentElement.cc || []
 // Shortkey
 Object.defineProperty(window, 'cc', {
   get () {
@@ -1194,7 +1209,12 @@ Object.defineProperty(window, 'cc', {
     for(let mutation of mutationsList) {
       if (mutation.type == 'childList') {
         console.log('A child node has been added or removed.')
-        if (mutation.target) hui.Control.initChildControl(document.documentElement)
+        if (mutation.target) {
+          hui.Control.nextStick = function () {
+            hui.Control.initChildControl(document.documentElement)
+          }
+          if (!hui.Control.parsing) hui.Control.nextStick()
+        }
       }
       else if (mutation.type == 'attributes') {
         console.log('The ' + mutation.attributeName + ' attribute was modified.')
