@@ -10,10 +10,13 @@
 </head>
 <body>
   <div id="wrap"></div>
+  <x-tag>
+    <x-alert>asfdsaf</x-alert>
+  </x-tag>
   <div style="margin: auto; width: 750px;">
-    <h2 style="text-align: center">HUI框架3.0</h2>
+    <h2 style="text-align: center">Hui框架3.0</h2>
     <p>
-      HUI MVC框架2.0采用了<a target="_blank" href="https://html.spec.whatwg.org/multipage/custom-elements.html">Custom Elements v1</a>所定义的方式创建自定义组件/元素，因此在3.0中可以直接使用&lt;x-tag&gt;&lt;/x-tag&gt;方式在页面插入自定义元素/组件，
+      Hui框架3.0采用了<a target="_blank" href="https://html.spec.whatwg.org/multipage/custom-elements.html">Custom Elements v1</a>所定义的方式创建自定义组件/元素，因此在3.0中可以直接使用&lt;x-tag&gt;&lt;/x-tag&gt;方式在页面插入自定义元素/组件，
       同时也兼容1.0中通过自定义属性hui-type="x-tag"的方式声明自定义元素/组件。
 
       <pre>
@@ -51,25 +54,23 @@
       &nbsp;&nbsp;&nbsp;&nbsp;
       <button class="btn3" onclick="doit3()">显示</button>
     </x-tag>
-    <x-tag>
-      <x-alert>asfdsaf</x-alert>
-    </x-tag>
+    
     
     <script>
       hui.Control.initChildControl(document.documentElement)
       // cc[1].cc[1].style.display='block'
       setTimeout(function () {
-        console.log(cc[1].cc)
+        // console.log(cc[1].cc)
       }, 200)
       function doit1(){
-        alert(cc[1].getParamMap().username)
+        alert(cc[2].getParamMap().username)
       }
       function doit2(){
-        cc[1].setValueByTree({username: "Tom", birthday: "2008-08-20", mobile: "13866669999"})
+        cc[2].setValueByTree({username: "Tom", birthday: "2008-08-20", mobile: "13866669999"})
       }
       function doit3(){
-        cc[2].cc[0].setContent(cc[1].getParamMap().username)
-        cc[2].cc[0].style.display = 'block'
+        cc[0].cc[0].setContent(cc[2].getParamMap().username)
+        cc[0].cc[0].style.display = 'block'
       }
     </script>
     <!-- <p>提示 CTR+U 可以查看页面源码</p> -->

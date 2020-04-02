@@ -28,6 +28,7 @@ hui.createClass('x-alert', {
       this.enterControl(opt_propMap)
     }
   },
+  isformitem: false,
   render: function (opt_propMap) {
     hui.Control.prototype.render.call(this, opt_propMap)
     var me = this
@@ -35,7 +36,6 @@ hui.createClass('x-alert', {
     // hui.Control.initChildControl(me, {}, opt_propMap)
     this.childrenChangedCallback()
   },
-  isformitem: false,
   childrenChangedCallback: function () {
     // console.log('invoked childrenChangedCallback!')
     var me = this

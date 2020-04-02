@@ -28,9 +28,9 @@ hui.Control = function(options, pending, opt_propMap) {
   this.initOptions(options)
   // if (this.tagName) {}
   // 生成控件id
-  if (!this.id) {
-    this.id = hui.makeGUID(this.formname)
-  }
+  // if (!this.id) {
+  //   this.id = hui.makeGUID(this.formname)
+  // }
   hui.Control.appendControl(options.parentControl, this)
   
   // 子类调用此构造函数不可以立即执行!!只能放在子类的构造函数中执行!否则实例化时找不到子类中定义的属性!
@@ -96,7 +96,8 @@ hui.Control.prototype = {
    * @public
    */
   render (opt_propMap) {
-    console.log(opt_propMap)
+    // console.log(opt_propMap)
+    console.log('render() ' + this.tagName)
     // var me = this;
     // var data = me.model && me.model.getData && typeof me.model.getData === 'function' ? me.model.getData() : {};
     // hui.Control.createNode(me, data, me);
@@ -336,10 +337,10 @@ hui.Control.prototype = {
       // 便于通过hui.Control.parseCtrId(me)找到control
       var ctrid = hui.Control.parseCtrId(me)
       if (!ctrid) {
-        ctrid = hui.makeGUID('')
-        me.className = (me.className + ' hui_ctrid' + ctrid).replace(/^(\s+|\s+$)/g, '')
+        ctrid = hui.makeGUID('x')
+        me.className = (me.className + ' ' + ctrid).replace(/^(\s+|\s+$)/g, '')
       }
-      if (me.getClass) hui.addClass(me, me.getClass())
+      // if (me.getClass) hui.addClass(me, me.getClass())
       if (me.setSize) me.setSize()
     }
 
@@ -365,14 +366,10 @@ hui.Control.prototype = {
     // 2. hui.Control.createNode()会通过enterControl来执行render
     // 3. initBehavior()会在后面执行
     if (me.getAttribute && me.getAttribute('_rendered') != 'true') {
-      me.setAttribute('_rendered', 'true')
       // 注：原本isES6和!isES6的逻辑不应该互相调用
       // 这里由于用户默认采用isES6的格式传入方法参数，因此这里才会调用childrenChangedCallback
-      if (me.childrenChangedCallback) {
-        me.childrenChangedCallback()
-      } else {
-        if (me.render) me.render(opt_propMap)
-      }
+      if (me.render) me.render(opt_propMap)
+      me.setAttribute('_rendered', 'true')
     }
 
     if (me.getAttribute && me.getAttribute('_initbehavior') != 'true') {
@@ -454,21 +451,34 @@ hui.Control.prototype = {
  * @public
  * @param {String} elem DOM元素
  */
-hui.Control.isChildControl = function(elem, list) {
-  var result = false
+hui.Control.isChildControl = function(elem, parent) {
   // 回溯找到父控件,若要移动控件,则需手动维护parentControl属性!!
   while (elem && elem.tagName && elem.parentNode) {
     elem = elem.parentNode
-    if (',html,body,'.indexOf(',' + String(elem.tagName).toLowerCase() + ',') != -1) break
-    for (var i = 0, len = list.length; i < len; i++) {
-      if (list[i] == elem) {
-        result = true
-        break
-      }
+    if (hui.Control.isValidControl(elem)) {
+      if (parent === elem) return true
+      break;
     }
   }
-  return result
+  return false
 }
+
+/**
+ * @method hui.Control.isValidControl
+ * @description 判断一个解析前DOM元素是否是控件
+ * @public
+ * @param {String} elem DOM元素
+ */
+hui.Control.isValidControl = function(item) {
+  if (!item || !item.getAttribute || !item.tagName) return false
+  
+  var tag = String(item.tagName).toLowerCase()
+  if (item.getAttribute('hui-type') || tag === 'x-tag') return true
+  if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) return true
+  if (tag === 'html' || item === document.documentElement) return true
+  return false
+}
+
 
 /**
  * @method hui.Control.findAllControl
@@ -599,7 +609,9 @@ hui.Control.getByFormname = function(formname, parentNode) {
 }
 
 hui.Control.parseCtrId = function(elem) {
-  return ((String((elem || {}).className).match(/hui_ctrid\d+/) || [])[0] || '')
+  if (!elem || !elem.className) return ''
+  let cid = elem.className.match(/x\d+/)
+  return cid ? cid[0] : ''
 }
 
 hui.Control.isFormItem = function(ctr) {
@@ -767,12 +779,14 @@ hui.Control.initChildControl = function(me, options, opt_propMap) {
 
   for (let j = 0, len2 = uiEls.length; j < len2; j++) {
     elem = uiEls[j]
-    if (!hui.Control.isChildControl(elem, me.cc || [])) continue;
+    if (!hui.Control.isChildControl(elem, me)) continue;
     
     hui.Control.createNode(elem, options, opt_propMap)
     // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
     me.cc = me.cc || []
-    me.cc.push(elem)
+    if (!me.cc.find(it => it === elem)) {
+      me.cc.push(elem)
+    }
     // elem.enterControl()
     elem.setAttribute('_rendered', 'true')
   }
@@ -796,13 +810,20 @@ hui.Control.initChildControl = function(me, options, opt_propMap) {
     window['x-tag'].prototype.parseParentControl.call(elem)
   }
   me.parsing = false
-  if (hui.Control.nextStick) {
-    let fn = hui.Control.nextStick
-    hui.Control.nextStick = null
+  hui.Control.nextTick()
+}
+
+hui.Control.tasks = []
+hui.Control.nextTick = function () {
+  while (hui.Control.tasks.length) {
+    let fn = hui.Control.tasks.shift()
     fn()
   }
 }
 
+hui.Control.wholeUpdate = function () {
+  hui.Control.initChildControl(document.documentElement)
+}
 
 /**
  * @method hui.Control.disposeList
@@ -849,14 +870,15 @@ window['x-tag'] = class extends HTMLElement {
     /* // 解析自定义属性和方法:value */
     hui.Control.parseProperty(this)
     // hui.Control.parseMethod(this) // 使用原生DOM后无需再像@click来转化一次定义方法，直接用onclick就可以了！
-    
+    console.log('attachedCallback' + this.tagName)
+    // 注：此时获取 this.innerHTML = '', 因此需要延时执行，childrenChangedTimer不能删！
     /* // 当整个DOM都被移除时，停止执行 childrenChangedCallback (setTimeout)，childrenChangedTimer 很重要！！ */
     this.childrenChangedTimer = window.requestAnimationFrame(function() {
       var me = this
       var ctrid = hui.Control.parseCtrId(me)
       if (!ctrid) {
-        ctrid = hui.makeGUID('')
-        me.className = (me.className + ' hui_ctrid' + ctrid).replace(/^(\\s+|\\s+$)/g, '')
+        ctrid = hui.makeGUID('x')
+        me.className = (me.className + ' ' + ctrid).replace(/^(\\s+|\\s+$)/g, '')
       }
       
       if (me.childrenChangedCallback) {
@@ -1098,11 +1120,6 @@ hui.Control.createNode = function(type, options, opt_propMap) {
     options = options || {}
 
     // 注：创建并渲染控件，每个控件必须有id
-    var objId = options.id
-    if (!objId) {
-      objId = hui.makeGUID(options.formname)
-      options.id = objId
-    }
     var existControl = hui.Control.getByCtrId(objId)
     if (existControl) existControl.dispose()
 
@@ -1112,8 +1129,7 @@ hui.Control.createNode = function(type, options, opt_propMap) {
     }
     // 创建控件对象
     var uiObj = new uiClazz(options, '', opt_propMap)
-    uiObj.id = uiObj.id || objId
-
+    
     // 检查是否有 enterControl 方法
     if (!uiObj.enterControl) {
       var child = uiObj,
@@ -1148,9 +1164,8 @@ hui.Control.createNode = function(type, options, opt_propMap) {
       }
     }
     // 注：每个控件必须有id
-    attrs.id = attrs.id ? attrs.id : hui.makeGUID(attrs.formname)
     // 注：type即elem
-    type.id = type.id || hui.makeGUID(attrs.id)
+    // type.id = type.id || hui.makeGUID('x')
     
     var tagName = String(type.getAttribute('hui-type') || type.tagName).toLowerCase()
     // return hui.Control.createNode(tagName, attrs, opt_propMap)
@@ -1163,7 +1178,6 @@ hui.Control.createNode = function(type, options, opt_propMap) {
     for (let m in hui.Control.prototype) {
       if (type[m] === undefined) type[m] = hui.Control.prototype[m]
     }
-    hui.Control.call(type, options, '', opt_propMap)
     
     // 检查是否有 enterControl 方法
     if (!type.enterControl) {
@@ -1175,7 +1189,9 @@ hui.Control.createNode = function(type, options, opt_propMap) {
         }
       }
     }
-    if (type.enterControl) type.enterControl(opt_propMap)
+    hui.Control.call(type, options, '', opt_propMap)
+    // 注：上一行自带 enterControl
+    // if (type.enterControl) type.enterControl(opt_propMap)
 
     return type
   }
@@ -1208,18 +1224,18 @@ Object.defineProperty(window, 'cc', {
   var callback = function(mutationsList) {
     for(let mutation of mutationsList) {
       if (mutation.type == 'childList') {
-        console.log('A child node has been added or removed.')
+        // console.log('A child node has been added or removed.')
         if (mutation.target) {
-          hui.Control.nextStick = function () {
-            hui.Control.initChildControl(document.documentElement)
+          if (!hui.Control.parsing) hui.Control.wholeUpdate()
+          else if (!hui.Control.tasks.find(it => it === hui.Control.wholeUpdate)) {
+            hui.Control.tasks.push(hui.Control.wholeUpdate)
           }
-          if (!hui.Control.parsing) hui.Control.nextStick()
         }
       }
       else if (mutation.type == 'attributes') {
-        console.log('The ' + mutation.attributeName + ' attribute was modified.')
+        // console.log('The ' + mutation.attributeName + ' attribute was modified.')
       } else {
-        console.log('The ' + mutation.attributeName + ' subtree was modified.')
+        // console.log('The ' + mutation.attributeName + ' subtree was modified.')
       }
     }
   }
