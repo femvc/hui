@@ -42,7 +42,7 @@ hui.createClass('x-alert', {
     var raw = me.innerHTML
     me.innerHTML = [
       '<div class="alert alert-warning alert-dismissible fade in">',
-      '  <button type="button" class="close" aria-label="Close">',
+      '  <button type="button" class="close">',
       '    <span aria-hidden="true">&times;</span>',
       '  </button>',
       '  <div class="content">' + raw + '1</div>',
