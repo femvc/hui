@@ -367,8 +367,8 @@ hui.Control.prototype = {
     // 3. initBehavior()会在后面执行
     if (me.getAttribute && me.getAttribute('_rendered') != 'true') {
       // 注：原本isES6和!isES6的逻辑不应该互相调用
-      // 这里由于用户默认采用isES6的格式传入方法参数，因此这里才会调用childrenChangedCallback
-      if (me.render) me.render(opt_propMap)
+      // 这里由于用户默认采用isES6的格式传入方法参数，因此这里才会调用children ChangedCallback
+      if (me.render) me.render(opt_propMap) // 老.render()
       me.setAttribute('_rendered', 'true')
     }
 
@@ -678,31 +678,6 @@ hui.Control.appendControl = function(parent, uiObj) {
   };*/
 }
 
-hui.Control.initChildControl2 = function(me, options, opt_propMap) {
-  var sign = ''
-  var tag = String(me.tagName).toLowerCase()
-  if (me.getAttribute('hui-type') || tag === 'x-tag') sign = 'y'
-  else if (tag.indexOf('x-') === 0 && window[tag] && window[tag].prototype && window[tag].prototype.dispose) sign = 'y'
-  
-  if (sign === 'y' && me.getAttribute('_rendered') !== 'true') {
-    hui.Control.createNode(me, options, opt_propMap)
-    // if (!(elem instanceof window['x-tag'])) Object.setPrototypeOf(elem, window['x-tag'].prototype)
-    me.setAttribute('_rendered', 'true')
-    return ''
-  }
-  
-  if (sign === 'y' && me.getAttribute('_rendered') === 'true') {
-    window['x-tag'].prototype.parseParentControl.call(me)
-  }
-  
-  if (!me.childNodes || !me.childNodes.length) return ''
-  for (let j = 0, len = me.childNodes.length; j < len; j++) {
-    var child = me.childNodes[j]
-    if (!child || !child.getAttribute || !child.tagName) continue; 
-    if (child.tagName === 'head' || child.tagName === 'HEAD') continue; 
-    hui.Control.initChildControl(child, options, opt_propMap)
-  }
-}
 /**
  * @method hui.Control.find AllNodes
  * @description 获取所有子节点element
@@ -791,7 +766,6 @@ hui.Control.initChildControl = function(me, options, opt_propMap) {
     elem.setAttribute('_rendered', 'true')
   }
 
-
   // 把dom元素存储到临时数组中
   // 控件渲染的过程会导致elements的改变
   uiEls = hui.Control.findAllNodes(me, function(item) {
@@ -813,6 +787,7 @@ hui.Control.initChildControl = function(me, options, opt_propMap) {
   hui.Control.nextTick()
 }
 
+// 缓存任务，要渲染下一个组件需当前组件渲染结束
 hui.Control.tasks = []
 hui.Control.nextTick = function () {
   while (hui.Control.tasks.length) {
@@ -871,9 +846,9 @@ window['x-tag'] = class extends HTMLElement {
     hui.Control.parseProperty(this)
     // hui.Control.parseMethod(this) // 使用原生DOM后无需再像@click来转化一次定义方法，直接用onclick就可以了！
     console.log('attachedCallback' + this.tagName)
-    // 注：此时获取 this.innerHTML = '', 因此需要延时执行，childrenChangedTimer不能删！
-    /* // 当整个DOM都被移除时，停止执行 childrenChangedCallback (setTimeout)，childrenChangedTimer 很重要！！ */
-    this.childrenChangedTimer = window.requestAnimationFrame(function() {
+    // 注：此时获取 this.innerHTML = '', 因此需要延时执行，renderTimer不能删！
+    /* // 当整个DOM都被移除时，停止执行 render (setTimeout)，renderTimer 很重要！！ */
+    this.renderTimer = window.requestAnimationFrame(function() {
       var me = this
       var ctrid = hui.Control.parseCtrId(me)
       if (!ctrid) {
@@ -881,8 +856,8 @@ window['x-tag'] = class extends HTMLElement {
         me.className = (me.className + ' ' + ctrid).replace(/^(\\s+|\\s+$)/g, '')
       }
       
-      if (me.childrenChangedCallback) {
-        me.childrenChangedCallback()
+      if (me.render) {
+        me.render()
       }
       if (me.childrenRenderFinish) {
         me.childrenRenderFinish()
@@ -896,10 +871,10 @@ window['x-tag'] = class extends HTMLElement {
     if (super.disconnectedCallback) super.disconnectedCallback()
     var me = this
     
-    /* // 停止执行 childrenChangedCallback 非常重要！ */
-    if (me.childrenChangedTimer) {
-      window.cancelAnimationFrame(me.childrenChangedTimer)
-      me.childrenChangedTimer = null
+    /* // 停止执行 render 非常重要！ */
+    if (me.renderTimer) {
+      window.cancelAnimationFrame(me.renderTimer)
+      me.renderTimer = null
     }
     if (me) {
       /* // 从父控件的childControl中删除引用 */
@@ -918,8 +893,8 @@ window['x-tag'] = class extends HTMLElement {
 window.customElements.define('x-tag', window['x-tag'])
 
 /* // 相当于v0中的detachedCallback */
-window['x-tag'].prototype.childrenChangedCallback = function() {
-  // console.log('invoked childrenChangedCallback!')
+window['x-tag'].prototype.render = function() {
+  // console.log('invoked render!')
   var me = this
   if (me.onChildrenRenderFinishHandle) me.onChildrenRenderFinishHandle()
 
@@ -1070,10 +1045,10 @@ hui.createClass = function(tagName, opt) {
       if (super.connectedCallback) super.connectedCallback()
       if (opt.connectedCallback) opt.connectedCallback.call(this)
     }
-    childrenChangedCallback () {
+    render () {
       if (opt && opt.init) opt.init.call(this)
-      if (super.childrenChangedCallback) super.childrenChangedCallback()
-      if (opt.childrenChangedCallback) opt.childrenChangedCallback.call(this)
+      if (super.render) super.render()
+      if (opt.render) opt.render.call(this)
       if (super.onChildrenRenderFinishHandle) super.onChildrenRenderFinishHandle()
       if (opt.onChildrenRenderFinishHandle) opt.onChildrenRenderFinishHandle()
       // 注：opt.onChildrenRenderFinish 会在 super.onChildrenRenderFinish 执行
@@ -1190,7 +1165,7 @@ hui.Control.createNode = function(type, options, opt_propMap) {
       }
     }
     hui.Control.call(type, options, '', opt_propMap)
-    // 注：上一行自带 enterControl
+    // 注：上一行hui.Control.call()自带 enterControl
     // if (type.enterControl) type.enterControl(opt_propMap)
 
     return type

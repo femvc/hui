@@ -34,10 +34,8 @@ hui.createClass('x-alert', {
     var me = this
     // 渲染对话框
     // hui.Control.initChildControl(me, {}, opt_propMap)
-    this.childrenChangedCallback()
-  },
-  childrenChangedCallback: function () {
-    // console.log('invoked childrenChangedCallback!')
+    
+    // console.log('invoked children ChangedCallback!')
     var me = this
     var raw = me.innerHTML
     me.innerHTML = [
